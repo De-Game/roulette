@@ -59,6 +59,8 @@ contract RouletteGame {
 
     uint8 private constant BLOCK_NUMBER_OFFSET = 12;
 
+
+
     // ----------------------------------
     // Events
     // ----------------------------------
@@ -89,6 +91,14 @@ contract RouletteGame {
     Bet[] public bets;
     uint256 public cutOffBlockNumber;
     uint8 public result;
+    //add threshold
+    uint8 public Authen_threshold;
+    //validator arry
+    address[] public valid_address;
+    //mini 
+    uint256 public minDeposite;
+    //max deposite (optional?)
+    uint256 public maxBet;
 
     // ----------------------------------
     // Constructor
@@ -151,6 +161,7 @@ contract RouletteGame {
         emit NoMoreBets(cutOffBlockNumber);
     }
 
+
     // wait at least 12 blocks before calling this function
     function generateResult() public {
         require(status == STATUS_NO_MORE_BETS, "No more bets allowed");
@@ -158,18 +169,21 @@ contract RouletteGame {
 
         // Ensure the block number is reached for randomness
         require(
-            block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET,
+            block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 1,
             "Block number not reached"
         );
 
         // Get the block hash of the earlier block
-        bytes32 randomHash = blockhash(cutOffBlockNumber - 1);
+        bytes32 randomHash = blockhash(cutOffBlockNumber + 1);
+        // adding host to generate randomhash
         randomHash = keccak256(abi.encodePacked(randomHash, host));
+        //adding hash of all players
         for (uint256 i = 0; i < bets.length; i++) {
             randomHash = keccak256(
                 abi.encodePacked(randomHash, bets[i].player)
             );
         }
+        //adding RNG???
 
         // Naive pseudo-randomness based on the blockhash
         uint256 randomNumber = uint256(randomHash);
@@ -184,6 +198,8 @@ contract RouletteGame {
         // TODO: Implement this function
         // to be implemented, assume the result is always valid first
         status = STATUS_RESULT_VALIDATED;
+        //capture result generated block height execute hash verified the result announced
+
         emit ResultValidated(result);
 
         // if the result is validated, we can settle the bet automatically

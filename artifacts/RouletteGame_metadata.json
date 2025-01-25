@@ -8,6 +8,11 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "_host",
+						"type": "address"
+					},
+					{
 						"internalType": "uint256",
 						"name": "_minBet",
 						"type": "uint256"
@@ -28,7 +33,32 @@
 					{
 						"indexed": false,
 						"internalType": "uint8",
-						"name": "number",
+						"name": "option",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "BetPayout",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "player",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "option",
 						"type": "uint8"
 					},
 					{
@@ -47,7 +77,7 @@
 					{
 						"indexed": true,
 						"internalType": "address",
-						"name": "house",
+						"name": "host",
 						"type": "address"
 					},
 					{
@@ -57,7 +87,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "HouseProfit",
+				"name": "DepositPlaced",
 				"type": "event"
 			},
 			{
@@ -66,7 +96,26 @@
 					{
 						"indexed": true,
 						"internalType": "address",
-						"name": "player",
+						"name": "host",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "minBet",
+						"type": "uint256"
+					}
+				],
+				"name": "GameCreated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "host",
 						"type": "address"
 					},
 					{
@@ -76,7 +125,20 @@
 						"type": "uint256"
 					}
 				],
-				"name": "Payout",
+				"name": "GameEnded",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "cutOffBlockNumber",
+						"type": "uint256"
+					}
+				],
+				"name": "NoMoreBets",
 				"type": "event"
 			},
 			{
@@ -85,25 +147,38 @@
 					{
 						"indexed": false,
 						"internalType": "uint8",
-						"name": "winningNumber",
+						"name": "result",
 						"type": "uint8"
 					}
 				],
-				"name": "SpinResult",
+				"name": "ResultGenerated",
 				"type": "event"
 			},
 			{
 				"anonymous": false,
 				"inputs": [
 					{
-						"indexed": true,
-						"internalType": "uint256",
-						"name": "spinBlockNumber",
-						"type": "uint256"
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "result",
+						"type": "uint8"
 					}
 				],
-				"name": "SpinScheduled",
+				"name": "ResultValidated",
 				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "Authen_threshold",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			},
 			{
 				"inputs": [
@@ -122,7 +197,7 @@
 					},
 					{
 						"internalType": "uint8",
-						"name": "number",
+						"name": "option",
 						"type": "uint8"
 					},
 					{
@@ -136,36 +211,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "finalizeSpin",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "getCurrentBets",
+				"name": "cutOffBlockNumber",
 				"outputs": [
 					{
-						"components": [
-							{
-								"internalType": "address",
-								"name": "player",
-								"type": "address"
-							},
-							{
-								"internalType": "uint8",
-								"name": "number",
-								"type": "uint8"
-							},
-							{
-								"internalType": "uint256",
-								"name": "amount",
-								"type": "uint256"
-							}
-						],
-						"internalType": "struct Roulette.Bet[]",
+						"internalType": "uint256",
 						"name": "",
-						"type": "tuple[]"
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -173,7 +224,73 @@
 			},
 			{
 				"inputs": [],
-				"name": "getNumberOfBets",
+				"name": "deposit",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "generateResult",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getBetsCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getStatus",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getTotalBetsAmount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "host",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "maxBet",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -199,7 +316,79 @@
 			},
 			{
 				"inputs": [],
-				"name": "owner",
+				"name": "minDeposite",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "noMoreBets",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "option",
+						"type": "uint8"
+					}
+				],
+				"name": "placeBet",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "result",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "settleBet",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "status",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "valid_address",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -211,140 +400,27 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "uint8",
-						"name": "number",
-						"type": "uint8"
-					}
-				],
-				"name": "placeBet",
-				"outputs": [],
-				"stateMutability": "payable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_newMinBet",
-						"type": "uint256"
-					}
-				],
-				"name": "setMinBet",
+				"inputs": [],
+				"name": "validateResult",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "spinBlockNumber",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "spinInProgress",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "spinWheel",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					}
-				],
-				"name": "withdrawHouseFunds",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"stateMutability": "payable",
-				"type": "receive"
 			}
 		],
 		"devdoc": {
 			"kind": "dev",
-			"methods": {
-				"constructor": {
-					"details": "Constructor sets the initial owner (house) and minimum bet.",
-					"params": {
-						"_minBet": "The minimum bet size required."
-					}
-				},
-				"finalizeSpin()": {
-					"details": "2nd step: Finalize the spin, using blockhash(spinBlockNumber) as our pseudo-random seed. You must wait until AFTER `spinBlockNumber` is mined (i.e., block >= spinBlockNumber). If you wait too long (> 256 blocks), blockhash will return bytes32(0)."
-				},
-				"getCurrentBets()": {
-					"details": "For large arrays, consider pagination or other indexing to avoid gas limit issues."
-				},
-				"placeBet(uint8)": {
-					"params": {
-						"number": "The roulette number on which the user wants to bet (0-36)."
-					}
-				},
-				"setMinBet(uint256)": {
-					"params": {
-						"_newMinBet": "New minimum bet amount."
-					}
-				},
-				"spinWheel()": {
-					"details": "1st step: Schedule the spin. We'll wait 7 blocks, then finalize. - Sets spinBlockNumber = current block + 7. - That means in ~7 blocks from now, `finalizeSpin()` can fetch the blockhash."
-				}
-			},
-			"title": "Roulette",
+			"methods": {},
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
-			"methods": {
-				"getCurrentBets()": {
-					"notice": "Returns all current bets. "
-				},
-				"getNumberOfBets()": {
-					"notice": "Returns the total number of bets in the current round."
-				},
-				"placeBet(uint8)": {
-					"notice": "Places a bet on a number between 0 and 36."
-				},
-				"setMinBet(uint256)": {
-					"notice": "Change the minimum bet (only owner)."
-				},
-				"withdrawHouseFunds(uint256)": {
-					"notice": "Owner can withdraw any leftover balance (in case of stuck funds)."
-				}
-			},
-			"notice": "A simplified Roulette smart contract demonstration (not production-ready).",
+			"methods": {},
 			"version": 1
 		}
 	},
 	"settings": {
 		"compilationTarget": {
-			"Roulette.sol": "Roulette"
+			"Roulette_reviewed_by_john.sol": "RouletteGame"
 		},
 		"evmVersion": "cancun",
 		"libraries": {},
@@ -358,12 +434,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"Roulette.sol": {
-			"keccak256": "0xe600f17717826a9e0afbf55885612e28f424162e9bc77bb279ec3572ef654016",
+		"Roulette_reviewed_by_john.sol": {
+			"keccak256": "0x600f022625ff10230961e7007ff3ba7f8395987c29f3942e233140ef7c4982c8",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0033ab130cbb2ac6da66f9acf6a238d441dcf572e6c1a921fb1cbccd2c900861",
-				"dweb:/ipfs/QmaeouSppK2DhTzH9n7S2vYC7ayjKGdqEj7sjWsd6hDQcV"
+				"bzz-raw://e6a4e588ebaaef18e38c2e360148619108fdd3fec8c60917fc95c922e5b8a4e9",
+				"dweb:/ipfs/QmW7ECDJekz7KZezXgRrFXvLcYd53vwPLCFiGyK8dPkr8T"
 			]
 		}
 	},
