@@ -16,6 +16,11 @@
 						"internalType": "uint256",
 						"name": "_minBet",
 						"type": "uint256"
+					},
+					{
+						"internalType": "address[]",
+						"name": "_validatorAddressList",
+						"type": "address[]"
 					}
 				],
 				"stateMutability": "nonpayable",
@@ -139,6 +144,25 @@
 					}
 				],
 				"name": "NoMoreBets",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "stepIndex",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "intermediateHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "ProofStep",
 				"type": "event"
 			},
 			{
@@ -381,6 +405,13 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "validateResult",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -388,7 +419,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "valid_address",
+				"name": "validator_address",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -398,18 +429,15 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "validateResult",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
 			}
 		],
 		"devdoc": {
 			"kind": "dev",
-			"methods": {},
+			"methods": {
+				"validateResult()": {
+					"details": "validateResult re-computes the random hash in a step-by-step manner.      For each step, it emits a ProofStep event, so it can be verified on-chain.      If the final result does not match the contract's stored `result`, it reverts."
+				}
+			},
 			"version": 1
 		},
 		"userdoc": {
@@ -435,11 +463,11 @@
 	},
 	"sources": {
 		"Roulette_reviewed_by_john.sol": {
-			"keccak256": "0x600f022625ff10230961e7007ff3ba7f8395987c29f3942e233140ef7c4982c8",
+			"keccak256": "0xbcca475b863e538e25c7ca4db74dd46677aa90b0036e9448d9ca286579b8737f",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://e6a4e588ebaaef18e38c2e360148619108fdd3fec8c60917fc95c922e5b8a4e9",
-				"dweb:/ipfs/QmW7ECDJekz7KZezXgRrFXvLcYd53vwPLCFiGyK8dPkr8T"
+				"bzz-raw://b5eb8dbd0ccf3e38f4a0fa6d878ea98966e10bac6d6b13a7ef0e3c04a2e3aac5",
+				"dweb:/ipfs/QmTV6rnnagpg9iwcVRqqSvVVjMQV2DYcd3Xyv9bMTzGDji"
 			]
 		}
 	},

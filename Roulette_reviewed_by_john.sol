@@ -72,6 +72,8 @@ contract RouletteGame {
     event ResultValidated(uint8 result);
     event BetPayout(address indexed player, uint8 option, uint256 amount);
     event GameEnded(address indexed host, uint256 amount);
+    // New event to prove step-by-step hashing
+    event ProofStep(uint8 stepIndex, bytes32 intermediateHash);
 
     // ----------------------------------
     // Struct
@@ -94,7 +96,7 @@ contract RouletteGame {
     //add threshold
     uint8 public Authen_threshold;
     //validator arry
-    address[] public valid_address;
+    address[] public validator_address;
     //mini 
     uint256 public minDeposite;
     //max deposite (optional?)
@@ -103,10 +105,13 @@ contract RouletteGame {
     // ----------------------------------
     // Constructor
     // ----------------------------------
-    constructor(address _host, uint256 _minBet) {
+    //**** Tempory allow input the validator address for testing purpose
+    constructor(address _host, uint256 _minBet, address[] memory _validatorAddressList) {
         host = _host;
         minBet = _minBet;
         status = STATUS_PENDING_HOST_DEPOSIT;
+        validator_address = _validatorAddressList;
+        emit GameCreated(_host, _minBet);
     }
 
     // ----------------------------------
@@ -194,15 +199,59 @@ contract RouletteGame {
     }
 
     // this function should be called by third party validator for mulitple signature validation
+    // ----------------------------------
+    // Validator Logic
+    // ----------------------------------
+    function isValidator(address _caller) internal view returns (bool) {
+        for (uint256 i = 0; i < validator_address.length; i++) {
+            if (validator_address[i] == _caller) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @dev validateResult re-computes the random hash in a step-by-step manner.
+     *      For each step, it emits a ProofStep event, so it can be verified on-chain.
+     *      If the final result does not match the contract's stored `result`, it reverts.
+     */
     function validateResult() public {
-        // TODO: Implement this function
-        // to be implemented, assume the result is always valid first
-        status = STATUS_RESULT_VALIDATED;
-        //capture result generated block height execute hash verified the result announced
+        require(status == STATUS_RESULT_GENERATED, "Result not generated");
+        require(isValidator(msg.sender), "Only a validator can validate");
 
+        // Step-by-step recomputation of the random seed
+        uint8 stepIndex = 1;
+
+        // Step 1: Start from the block hash
+        bytes32 checkHash = blockhash(cutOffBlockNumber + 1);
+        emit ProofStep(stepIndex, checkHash);
+        stepIndex++;
+
+        // Step 2: Include the host address
+        checkHash = keccak256(abi.encodePacked(checkHash, host));
+        emit ProofStep(stepIndex, checkHash);
+        stepIndex++;
+
+        // Steps 3..(3 + bets.length - 1): Include each player
+        for (uint256 i = 0; i < bets.length; i++) {
+            checkHash = keccak256(abi.encodePacked(checkHash, bets[i].player));
+            emit ProofStep(stepIndex, checkHash);
+            stepIndex++;
+        }
+
+        // Compute final random result
+        uint8 recomputedResult = uint8(uint256(checkHash) % OPTION_TOTAL_COUNT);
+
+        // Compare
+        require(
+            recomputedResult == result,
+            "Stored result != recomputed result"
+        );
+
+        // If successful, mark validated, then settle
         emit ResultValidated(result);
-
-        // if the result is validated, we can settle the bet automatically
+        status = STATUS_RESULT_VALIDATED;
         settleBet();
     }
 
