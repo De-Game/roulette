@@ -433,7 +433,8 @@ contract RouletteGame {
     event BetPayout(address indexed player, uint8 option, uint256 amount);
     event GameEnded(address indexed host, uint256 amount);
     // New event to prove step-by-step hashing
-    event ProofStep(uint8 stepIndex, bytes intermediateHash);
+    event ProofStep(uint8 stepIndex, string explanation, bytes intermediateHash);
+    //event ProofStepStringified(string stepDetails);
 
     // ----------------------------------
     // Struct
@@ -480,7 +481,97 @@ contract RouletteGame {
         validate_threshold = _valid_threshold;
         emit GameCreated(_host, _minBet, _validators, _valid_threshold);
     }
+    // ----------------------------------
+    // Private / Internal Functions
+    // ----------------------------------
+    function _uint2str(uint256 _i) private pure returns (string memory) {
+        if (_i == 0) {
+            return "0"; // Ensure zero is handled correctly
+        }
 
+        uint256 j = _i;
+        uint256 length = 0;
+
+        // Calculate number of digits in _i
+        while (j != 0) {
+            length++;
+            j /= 10;
+        }
+
+        // Create a bytes array of correct size
+        bytes memory bstr = new bytes(length);
+
+        uint256 k = length; // Initialize k with length
+
+        j = _i;
+        while (j != 0) {
+            k--; // Move index before assignment to avoid underflow
+            bstr[k] = bytes1(uint8(48 + (j % 10))); // Convert last digit to ASCII
+            j /= 10;
+        }
+
+        return string(bstr);
+    }
+    function _bytes32ToHexString(bytes32 data) private pure returns (string memory) {
+        bytes memory hexChars = "0123456789abcdef";
+        bytes memory str = new bytes(66); // "0x" + 64 hex chars
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < 32; i++) {
+            // each byte splits into two hex characters
+            str[2 + i * 2] = hexChars[uint8(data[i] >> 4)];
+            str[3 + i * 2] = hexChars[uint8(data[i] & 0x0f)];
+        }
+        return string(str);
+    }
+
+    function _bytesToHexString(bytes memory data) private pure returns (string memory) {
+        bytes memory hexChars = "0123456789abcdef";
+        bytes memory str = new bytes(data.length * 2 + 2); // "0x" + 2 chars per byte
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < data.length; i++) {
+            str[2 + i * 2] = hexChars[uint8(data[i] >> 4)];
+            str[3 + i * 2] = hexChars[uint8(data[i] & 0x0f)];
+        }
+        return string(str);
+    }
+    /**
+    * @dev Convert a single address to a 0x-prefixed hex string.
+    */
+    function _addressToString(address _addr) private pure returns (string memory) {
+        bytes memory hexChars = "0123456789abcdef";
+        bytes20 data = bytes20(_addr);
+        bytes memory str = new bytes(42); // "0x" + 40 hex chars
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < 20; i++) {
+            str[2 + i * 2] = hexChars[uint8(data[i] >> 4)];
+            str[3 + i * 2] = hexChars[uint8(data[i] & 0x0f)];
+        }
+        return string(str);
+    }
+
+    /**
+    * @dev Convert an array of addresses into a bracketed list of hex strings.
+    *      Example: "[0xAb84..., 0x4B20...]"
+    */
+    function _addressesToString(address[] memory _addrs) private pure returns (string memory) {
+        if (_addrs.length == 0) {
+            return "[]";
+        }
+
+        bytes memory add_result = "[";
+
+        for (uint256 i = 0; i < _addrs.length; i++) {
+            add_result = abi.encodePacked(add_result, _addressToString(_addrs[i]));
+            if (i < _addrs.length - 1) {
+                add_result = abi.encodePacked(add_result, ", ");
+            }
+        }
+        add_result = abi.encodePacked(add_result, "]");
+        return string(add_result);
+    }
     // ----------------------------------
     // Public / External Functions
     // ----------------------------------
@@ -584,56 +675,203 @@ contract RouletteGame {
         return false;
     }
 
+
     /**
-     * @dev validateResult re-computes the random hash in a step-by-step manner.
-     *      For each step, it emits a ProofStep event, so it can be verified on-chain.
-     *      If the final result does not match the contract's stored `result`, it reverts.
-     */
+    * @dev validateResult re-computes the random hash in a step-by-step manner.
+    *      For each step, it emits a ProofStep event with a layman-friendly message 
+    *      and the raw data used at that step for verification.
+    *
+    *      This version also:
+    *       - Prints the exact block number used.
+    *       - Shows the blockhash in hex form.
+    *       - Shows the array of addresses (host + players) in a bracketed list.
+    *       - Emits the raw data in the event logs for cryptographic verification.
+    */
     function validateResult() public {
+        // Ensure the result was already generated
         require(status == STATUS_RESULT_GENERATED, "Result not generated");
+
+        // Ensure we have waited at least the required blocks
+        require(
+            block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 1,
+            "Wait at least 12 blocks after generation"
+        );
+
+        // Only designated validators can validate
         require(isValidator(msg.sender), "Only a validator can validate");
 
-        // Step-by-step recomputation of the random seed
-        uint8 stepIndex = 1;
+        // ----------------------------------
+        // STEP 1: Retrieve the block hash from (cutOffBlockNumber + 1)
+        // ----------------------------------
+        uint256 usedBlockNumber = cutOffBlockNumber + 1;
+        bytes32 randomBlockHash = blockhash(usedBlockNumber);
 
-        // Step 1: Start from the block hash
-        bytes32 randomBlockHash = blockhash(cutOffBlockNumber + 1);
-        emit ProofStep(stepIndex, abi.encode(randomBlockHash));
-        stepIndex++;
+        // Emit block number + blockhash in a readable explanation
+        emit ProofStep(
+            1,
+            string(
+                abi.encodePacked(
+                    "Blockhash from block #",
+                    _uint2str(usedBlockNumber),
+                    ": ",
+                    _bytes32ToHexString(randomBlockHash),
+                    " - basis for randomness"
+                )
+            ),
+            // The data field: both the numeric block number and the bytes32 blockhash
+            abi.encode(usedBlockNumber, randomBlockHash)
+        );
 
-        // we use host address and player address to generate random hash as salt
-        bytes memory packedData = abi.encodePacked(host);
+        // ----------------------------------
+        // STEP 2: Gather addresses into an array [host, all players]
+        // ----------------------------------
+        address[] memory addrList = new address[](bets.length + 1);
+        addrList[0] = host;
         for (uint256 i = 0; i < bets.length; i++) {
-            packedData = abi.encodePacked(packedData, bets[i].player);
+            addrList[i + 1] = bets[i].player;
         }
-        emit ProofStep(stepIndex, packedData);
-        stepIndex++;
 
-        // Step 2: Include the host address
+        // Convert the address array to a bracketed list for readability
+        string memory addrListString = _addressesToString(addrList);
+
+        // Also build the "packed" bytes as done in generateResult() for hashing
+        bytes memory packedData = abi.encodePacked(host);
+        for (uint256 j = 0; j < bets.length; j++) {
+            packedData = abi.encodePacked(packedData, bets[j].player);
+        }
+
+        // Emit the array in bracketed string form, raw array data in the event logs
+        emit ProofStep(
+            2,
+            string(
+                abi.encodePacked(
+                    "Addresses used for randomness: ",
+                    addrListString
+                )
+            ),
+            abi.encode(addrList) // raw array
+        );
+
+        // Optionally, show the packed data in hex form too
+        emit ProofStep(
+            3,
+            string(
+                abi.encodePacked(
+                    "Packed data of addresses in hex: ",
+                    _bytesToHexString(packedData)
+                )
+            ),
+            packedData
+        );
+
+        // ----------------------------------
+        // STEP 4: keccak256 of [blockhash + packedData]
+        // ----------------------------------
         bytes32 randomHash = keccak256(
             abi.encodePacked(randomBlockHash, packedData)
         );
-        emit ProofStep(stepIndex, abi.encode(randomHash));
-        stepIndex++;
+        emit ProofStep(
+            4,
+            string(
+                abi.encodePacked(
+                    "Keccak256 of [blockhash + packedData]: ",
+                    _bytes32ToHexString(randomHash)
+                )
+            ),
+            abi.encode(randomHash)
+        );
 
-        // Compute final random result
+        // ----------------------------------
+        // STEP 5: Take that hash % RESULT_COUNT for final outcome
+        // ----------------------------------
         uint256 randomNumber = uint256(randomHash);
         uint8 recomputedResult = uint8(randomNumber % RESULT_COUNT);
 
-        // Compare
+        emit ProofStep(
+            5,
+            string(
+                abi.encodePacked(
+                    "Final random outcome (mod ",
+                    _uint2str(RESULT_COUNT),
+                    "): ",
+                    _uint2str(recomputedResult)
+                )
+            ),
+            abi.encode(recomputedResult)
+        );
+
+        // ----------------------------------
+        // STEP 6: Ensure matches the stored result
+        // ----------------------------------
         require(
             recomputedResult == result,
             "Stored result != recomputed result"
         );
 
+        // Record this validator's signature
         signedValidators.push(msg.sender);
+
+        // If enough signatures, finalize
         if (signedValidators.length >= validate_threshold) {
             emit ResultValidated(result);
             status = STATUS_RESULT_VALIDATED;
             settleBet();
         }
     }
+    /*function validateResult() public {
+        require(status == STATUS_RESULT_GENERATED, "Result not generated");
+        require(block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 12, "Wait at least 12 blocks");
+        require(isValidator(msg.sender), "Only a validator can validate");
 
+        uint256 usedBlockNumber = cutOffBlockNumber + 1;
+        bytes32 randomBlockHash = blockhash(usedBlockNumber);
+
+        emit ProofStepStringified(string(abi.encodePacked(
+            "Step 1: Blockhash from block #", _uint2str(usedBlockNumber), " = ", _bytes32ToHexString(randomBlockHash)
+        )));
+
+        address[] memory addrList = new address[](bets.length + 1);
+        addrList[0] = host;
+        for (uint256 i = 0; i < bets.length; i++) {
+            addrList[i + 1] = bets[i].player;
+        }
+
+        emit ProofStepStringified(string(abi.encodePacked(
+            "Step 2: Addresses used in randomness = ", _addressesToString(addrList)
+        )));
+
+        bytes memory packedData = abi.encodePacked(host);
+        for (uint256 j = 0; j < bets.length; j++) {
+            packedData = abi.encodePacked(packedData, bets[j].player);
+        }
+
+        emit ProofStepStringified(string(abi.encodePacked(
+            "Step 3: Keccak256 input: blockhash + packedData"
+        )));
+
+        bytes32 randomHash = keccak256(abi.encodePacked(randomBlockHash, packedData));
+
+        emit ProofStepStringified(string(abi.encodePacked(
+            "Step 4: Keccak256 output = ", _bytes32ToHexString(randomHash)
+        )));
+
+        uint256 randomNumber = uint256(randomHash);
+        uint8 recomputedResult = uint8(randomNumber % RESULT_COUNT);
+
+        emit ProofStepStringified(string(abi.encodePacked(
+            "Step 5: Final outcome (mod ", _uint2str(RESULT_COUNT), ") = ", _uint2str(recomputedResult)
+        )));
+
+        require(recomputedResult == result, "Stored result != recomputed result");
+
+        signedValidators.push(msg.sender);
+
+        if (signedValidators.length >= validate_threshold) {
+            emit ResultValidated(result);
+            status = STATUS_RESULT_VALIDATED;
+            settleBet();
+        }
+    }*/
     //
     function settleBet() public {
         require(status == STATUS_RESULT_VALIDATED, "Result not validated yet");

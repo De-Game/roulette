@@ -19,8 +19,13 @@
 					},
 					{
 						"internalType": "address[]",
-						"name": "_validatorAddressList",
+						"name": "_validators",
 						"type": "address[]"
+					},
+					{
+						"internalType": "uint8",
+						"name": "_valid_threshold",
+						"type": "uint8"
 					}
 				],
 				"stateMutability": "nonpayable",
@@ -109,6 +114,18 @@
 						"internalType": "uint256",
 						"name": "minBet",
 						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "address[]",
+						"name": "validators",
+						"type": "address[]"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "valid_threshold",
+						"type": "uint8"
 					}
 				],
 				"name": "GameCreated",
@@ -157,9 +174,15 @@
 					},
 					{
 						"indexed": false,
-						"internalType": "bytes32",
+						"internalType": "string",
+						"name": "explanation",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes",
 						"name": "intermediateHash",
-						"type": "bytes32"
+						"type": "bytes"
 					}
 				],
 				"name": "ProofStep",
@@ -192,8 +215,223 @@
 				"type": "event"
 			},
 			{
-				"inputs": [],
-				"name": "Authen_threshold",
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_BLACK_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_EVEN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_FIRST_COLUMN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_FIRST_DOZEN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_HIGH_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_LOW_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_ODD_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_RED_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_SECOND_COLUMN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_SECOND_DOZEN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_THIRD_COLUMN_SET",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "OPTION_THIRD_DOZEN_SET",
 				"outputs": [
 					{
 						"internalType": "uint8",
@@ -313,6 +551,234 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInBlackSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInEvenSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInFirstColumnSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInFirstDozenSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInHighSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInLowSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInOddSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInRedSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInSecondColumnSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInSecondDozenSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInThirdColumnSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint8",
+						"name": "number",
+						"type": "uint8"
+					}
+				],
+				"name": "isInThirdDozenSet",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "maxBet",
 				"outputs": [
@@ -392,6 +858,25 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "signedValidators",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "status",
 				"outputs": [
@@ -412,6 +897,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "validate_threshold",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -419,7 +917,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "validator_address",
+				"name": "validators",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -435,7 +933,7 @@
 			"kind": "dev",
 			"methods": {
 				"validateResult()": {
-					"details": "validateResult re-computes the random hash in a step-by-step manner.      For each step, it emits a ProofStep event, so it can be verified on-chain.      If the final result does not match the contract's stored `result`, it reverts."
+					"details": "validateResult re-computes the random hash in a step-by-step manner.      For each step, it emits a ProofStep event with a layman-friendly message       and the raw data used at that step for verification.      This version also:       - Prints the exact block number used.       - Shows the blockhash in hex form.       - Shows the array of addresses (host + players) in a bracketed list.       - Emits the raw data in the event logs for cryptographic verification."
 				}
 			},
 			"version": 1
@@ -463,11 +961,11 @@
 	},
 	"sources": {
 		"Roulette_reviewed_by_john.sol": {
-			"keccak256": "0xbcca475b863e538e25c7ca4db74dd46677aa90b0036e9448d9ca286579b8737f",
+			"keccak256": "0x588bd8d5d5257ca7f8549da5d4a19514df6c3188371dfeba328650fe654d5694",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b5eb8dbd0ccf3e38f4a0fa6d878ea98966e10bac6d6b13a7ef0e3c04a2e3aac5",
-				"dweb:/ipfs/QmTV6rnnagpg9iwcVRqqSvVVjMQV2DYcd3Xyv9bMTzGDji"
+				"bzz-raw://8c56aa3b73ad879ac1f2d446ce336c3e53cec2d5a211e60d94058dc8dee26b72",
+				"dweb:/ipfs/QmQWcZ5FWtHPxDKUnECNKT4oubTDWHt6ivLQMzLeTk7ZC5"
 			]
 		}
 	},
