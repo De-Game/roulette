@@ -381,30 +381,30 @@ contract RouletteGame {
         return false; // Number not found in the set
     }
 
-    // Odds
+    // Payout
     // Maximum odds is 37
-    uint256 private constant ODDS_MAX = 3700;
+    uint256 private constant PAYOUT_MAX = 360;
 
     // scaling factor because solidity did not support floating number
-    uint256 private constant ODDS_SCALE_FACTOR = 100;
+    uint256 private constant PAYOUT_SCALE_FACTOR = 10;
 
-    // odss for straight up
-    uint256 private constant ODDS_STRAIGHT_UP = 3700;
+    // payout for straight up
+    uint256 private constant PAYOUT_STRAIGHT_UP = 360;
 
-    // odds for low or high
-    uint256 private constant ODDS_LOW_OR_HIGH = 111;
+    // payout for low or high
+    uint256 private constant PAYOUT_LOW_OR_HIGH = 20;
 
-    // odds for red or black
-    uint256 private constant ODDS_RED_OR_BLACK = 111;
+    // payout for red or black
+    uint256 private constant PAYOUT_RED_OR_BLACK = 20;
 
-    // odds for even or odd
-    uint256 private constant ODDS_EVEN_OR_ODD = 111;
+    // payout for even or odd
+    uint256 private constant PAYOUT_EVEN_OR_ODD = 20;
 
-    // odds for columns
-    uint256 private constant ODDS_COLUMNS = 217;
+    // payout for columns
+    uint256 private constant PAYOUT_COLUMNS = 15;
 
-    // odds for dozen
-    uint256 private constant ODDS_DOZEN = 217;
+    // payout for dozen
+    uint256 private constant PAYOUT_DOZEN = 15;
 
     // Status
     uint8 private constant STATUS_PENDING_HOST_DEPOSIT = 0;
@@ -433,7 +433,11 @@ contract RouletteGame {
     event BetPayout(address indexed player, uint8 option, uint256 amount);
     event GameEnded(address indexed host, uint256 amount);
     // New event to prove step-by-step hashing
-    event ProofStep(uint8 stepIndex, string explanation, bytes intermediateHash);
+    event ProofStep(
+        uint8 stepIndex,
+        string explanation,
+        bytes intermediateHash
+    );
     //event ProofStepStringified(string stepDetails);
 
     // ----------------------------------
@@ -512,7 +516,9 @@ contract RouletteGame {
 
         return string(bstr);
     }
-    function _bytes32ToHexString(bytes32 data) private pure returns (string memory) {
+    function _bytes32ToHexString(
+        bytes32 data
+    ) private pure returns (string memory) {
         bytes memory hexChars = "0123456789abcdef";
         bytes memory str = new bytes(66); // "0x" + 64 hex chars
         str[0] = "0";
@@ -525,7 +531,9 @@ contract RouletteGame {
         return string(str);
     }
 
-    function _bytesToHexString(bytes memory data) private pure returns (string memory) {
+    function _bytesToHexString(
+        bytes memory data
+    ) private pure returns (string memory) {
         bytes memory hexChars = "0123456789abcdef";
         bytes memory str = new bytes(data.length * 2 + 2); // "0x" + 2 chars per byte
         str[0] = "0";
@@ -537,9 +545,11 @@ contract RouletteGame {
         return string(str);
     }
     /**
-    * @dev Convert a single address to a 0x-prefixed hex string.
-    */
-    function _addressToString(address _addr) private pure returns (string memory) {
+     * @dev Convert a single address to a 0x-prefixed hex string.
+     */
+    function _addressToString(
+        address _addr
+    ) private pure returns (string memory) {
         bytes memory hexChars = "0123456789abcdef";
         bytes20 data = bytes20(_addr);
         bytes memory str = new bytes(42); // "0x" + 40 hex chars
@@ -553,10 +563,12 @@ contract RouletteGame {
     }
 
     /**
-    * @dev Convert an array of addresses into a bracketed list of hex strings.
-    *      Example: "[0xAb84..., 0x4B20...]"
-    */
-    function _addressesToString(address[] memory _addrs) private pure returns (string memory) {
+     * @dev Convert an array of addresses into a bracketed list of hex strings.
+     *      Example: "[0xAb84..., 0x4B20...]"
+     */
+    function _addressesToString(
+        address[] memory _addrs
+    ) private pure returns (string memory) {
         if (_addrs.length == 0) {
             return "[]";
         }
@@ -564,7 +576,10 @@ contract RouletteGame {
         bytes memory add_result = "[";
 
         for (uint256 i = 0; i < _addrs.length; i++) {
-            add_result = abi.encodePacked(add_result, _addressToString(_addrs[i]));
+            add_result = abi.encodePacked(
+                add_result,
+                _addressToString(_addrs[i])
+            );
             if (i < _addrs.length - 1) {
                 add_result = abi.encodePacked(add_result, ", ");
             }
@@ -606,7 +621,8 @@ contract RouletteGame {
         require(option <= 49, "Option must be between 0 and 37");
         require(msg.value >= minBet, "Bet amount is below the minimum bet");
         require(
-            msg.value < (address(this).balance * ODDS_MAX) / ODDS_SCALE_FACTOR,
+            msg.value <
+                (address(this).balance * PAYOUT_MAX) / PAYOUT_SCALE_FACTOR,
             "Bet amount is above the maximum bet"
         );
 
@@ -675,18 +691,17 @@ contract RouletteGame {
         return false;
     }
 
-
     /**
-    * @dev validateResult re-computes the random hash in a step-by-step manner.
-    *      For each step, it emits a ProofStep event with a layman-friendly message 
-    *      and the raw data used at that step for verification.
-    *
-    *      This version also:
-    *       - Prints the exact block number used.
-    *       - Shows the blockhash in hex form.
-    *       - Shows the array of addresses (host + players) in a bracketed list.
-    *       - Emits the raw data in the event logs for cryptographic verification.
-    */
+     * @dev validateResult re-computes the random hash in a step-by-step manner.
+     *      For each step, it emits a ProofStep event with a layman-friendly message
+     *      and the raw data used at that step for verification.
+     *
+     *      This version also:
+     *       - Prints the exact block number used.
+     *       - Shows the blockhash in hex form.
+     *       - Shows the array of addresses (host + players) in a bracketed list.
+     *       - Emits the raw data in the event logs for cryptographic verification.
+     */
     function validateResult() public {
         // Ensure the result was already generated
         require(status == STATUS_RESULT_GENERATED, "Result not generated");
@@ -884,12 +899,14 @@ contract RouletteGame {
                 if (bets[i].option == result) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_STRAIGHT_UP) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_STRAIGHT_UP) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_STRAIGHT_UP) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_STRAIGHT_UP) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -898,12 +915,14 @@ contract RouletteGame {
                 if (isInLowSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_LOW_OR_HIGH) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_LOW_OR_HIGH) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -911,12 +930,14 @@ contract RouletteGame {
                 if (isInHighSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_LOW_OR_HIGH) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_LOW_OR_HIGH) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -924,12 +945,14 @@ contract RouletteGame {
                 if (isInRedSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_RED_OR_BLACK) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_RED_OR_BLACK) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -937,12 +960,14 @@ contract RouletteGame {
                 if (isInBlackSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_RED_OR_BLACK) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_RED_OR_BLACK) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -950,12 +975,14 @@ contract RouletteGame {
                 if (isInEvenSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_EVEN_OR_ODD) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_EVEN_OR_ODD) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -963,12 +990,14 @@ contract RouletteGame {
                 if (isInOddSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_EVEN_OR_ODD) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
+                            PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_EVEN_OR_ODD) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
+                            PAYOUT_SCALE_FACTOR
                     );
                 }
                 break;
@@ -976,72 +1005,72 @@ contract RouletteGame {
                 if (isInFirstColumnSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                 }
             } else if (bets[i].option == 45) {
                 if (isInSecondColumnSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                 }
             } else if (bets[i].option == 46) {
                 if (isInThirdColumnSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_COLUMNS) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
                     );
                 }
             } else if (bets[i].option == 47) {
                 if (isInFirstDozenSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                 }
             } else if (bets[i].option == 48) {
                 if (isInSecondDozenSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                 }
             } else if (bets[i].option == 49) {
                 if (isInThirdDozenSet(result)) {
                     // Player wins
                     payable(bets[i].player).transfer(
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                     emit BetPayout(
                         bets[i].player,
                         bets[i].option,
-                        (bets[i].amount * ODDS_DOZEN) / ODDS_SCALE_FACTOR
+                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
                     );
                 }
             }
