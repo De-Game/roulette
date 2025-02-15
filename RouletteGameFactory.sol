@@ -4,11 +4,6 @@ import "./RouletteGame.sol";
 
 contract RouletteGameFactory {
     event GameCreated(address indexed gameAddress, uint256 timestamp);
-    event FundTransferred(
-        address indexed from,
-        address indexed to,
-        uint256 amount
-    );
 
     struct GameInfo {
         address gameAddress;
@@ -25,11 +20,6 @@ contract RouletteGameFactory {
         address[] memory _validators,
         uint8 _valid_threshold
     ) public payable returns (address) {
-        require(
-            msg.value >= 0.1 ether,
-            "Minimum funding required for game creation"
-        );
-
         RouletteGame rouletteGame = new RouletteGame(
             _host,
             _minBet,
