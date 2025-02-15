@@ -8,7 +8,6 @@ contract RouletteGameFactory {
     struct GameInfo {
         address gameAddress;
         uint256 creationTime;
-        bool isActive;
     }
 
     mapping(uint256 => GameInfo) public games; // Maps game index to GameInfo
@@ -29,8 +28,7 @@ contract RouletteGameFactory {
 
         games[gameCount] = GameInfo({
             gameAddress: address(rouletteGame),
-            creationTime: block.timestamp,
-            isActive: true
+            creationTime: block.timestamp
         });
 
         emit GameCreated(address(rouletteGame), block.timestamp);
@@ -50,8 +48,8 @@ contract RouletteGameFactory {
     // Function to get a specific game by index
     function getGameByIndex(
         uint256 _index
-    ) external view returns (address, uint256, bool) {
+    ) external view returns (address, uint256) {
         GameInfo storage game = games[_index];
-        return (game.gameAddress, game.creationTime, game.isActive);
+        return (game.gameAddress, game.creationTime);
     }
 }
