@@ -612,6 +612,7 @@ contract RouletteGame {
             "Deposit is not allowed"
         );
         require(msg.sender == host, "Only host can deposit");
+        require(msg.value > 0, "Invalid deposit amount");
 
         status = STATUS_PENDING_PLAYER_BET;
         emit DepositPlaced(msg.sender, msg.value);
