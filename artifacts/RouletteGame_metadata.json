@@ -35,6 +35,31 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "rsn",
+						"type": "string"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "player",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "BetCancelled",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": true,
 						"internalType": "address",
 						"name": "player",
@@ -199,6 +224,25 @@
 					}
 				],
 				"name": "ResultGenerated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "recomputedResult",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint8",
+						"name": "result",
+						"type": "uint8"
+					}
+				],
+				"name": "ResultMismatch",
 				"type": "event"
 			},
 			{
@@ -779,6 +823,44 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "matchSigners",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "matchedValidators",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "maxBet",
 				"outputs": [
@@ -812,6 +894,44 @@
 						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "mismatchSigners",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "mismatchedValidators",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -855,25 +975,6 @@
 				"name": "settleBet",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "signedValidators",
-				"outputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -933,7 +1034,7 @@
 			"kind": "dev",
 			"methods": {
 				"validateResult()": {
-					"details": "validateResult re-computes the random hash in a step-by-step manner.      For each step, it emits a ProofStep event with a layman-friendly message       and the raw data used at that step for verification.      This version also:       - Prints the exact block number used.       - Shows the blockhash in hex form.       - Shows the array of addresses (host + players) in a bracketed list.       - Emits the raw data in the event logs for cryptographic verification."
+					"details": "validateResult re-computes the random hash in a step-by-step manner.      For each step, it emits a ProofStep event with a layman-friendly message      and the raw data used at that step for verification.      This version also:       - Prints the exact block number used.       - Shows the blockhash in hex form.       - Shows the array of addresses (host + players) in a bracketed list.       - Emits the raw data in the event logs for cryptographic verification."
 				}
 			},
 			"version": 1
@@ -946,7 +1047,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"Roulette_reviewed_by_john.sol": "RouletteGame"
+			"RouletteGame.sol": "RouletteGame"
 		},
 		"evmVersion": "cancun",
 		"libraries": {},
@@ -954,18 +1055,18 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": false,
+			"enabled": true,
 			"runs": 200
 		},
 		"remappings": []
 	},
 	"sources": {
-		"Roulette_reviewed_by_john.sol": {
-			"keccak256": "0x588bd8d5d5257ca7f8549da5d4a19514df6c3188371dfeba328650fe654d5694",
+		"RouletteGame.sol": {
+			"keccak256": "0x083325b0dcc0dc8d388cd492fa803292afd2b2c00cf28bf75a73c922f95595cf",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8c56aa3b73ad879ac1f2d446ce336c3e53cec2d5a211e60d94058dc8dee26b72",
-				"dweb:/ipfs/QmQWcZ5FWtHPxDKUnECNKT4oubTDWHt6ivLQMzLeTk7ZC5"
+				"bzz-raw://8b44a3191fb602f8b94e2caa8df105257386a6eb6d832c3e60fd2aed373f99e3",
+				"dweb:/ipfs/QmRytSvY27J8Y88t27TdZH7qZrwZjmdeuL8KXYQAauDnVL"
 			]
 		}
 	},

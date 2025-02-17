@@ -1,0 +1,181 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "gameAddress",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"name": "GameCreated",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_host",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_minBet",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address[]",
+						"name": "_validators",
+						"type": "address[]"
+					},
+					{
+						"internalType": "uint8",
+						"name": "_valid_threshold",
+						"type": "uint8"
+					}
+				],
+				"name": "createRouletteGame",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "gameCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "games",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "gameAddress",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "creationTime",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAllGames",
+				"outputs": [
+					{
+						"internalType": "address[]",
+						"name": "",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_index",
+						"type": "uint256"
+					}
+				],
+				"name": "getGameByIndex",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"RouletteGameFactory.sol": "RouletteGameFactory"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"RouletteGame.sol": {
+			"keccak256": "0x16419004d1f86ea62d0231625564bc24e7a189f7c65abd9ff1ae8302a78dd0b5",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5ef7546f0edd0b88639c46b0b750a288d8003604cce25e7c5577e379228fdc6f",
+				"dweb:/ipfs/QmYsQAVhk5XciwpYftbjftHyspY4mnRoHjhTsD9BPEenXY"
+			]
+		},
+		"RouletteGameFactory.sol": {
+			"keccak256": "0x9561eb19d53f3746ccca29b6b280bd9452bfc61c51a9ce72978753f31890eb51",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d675d138b65895f86b3b5477c681a7b93cfa1a1056a23ea199b041a62c35eed4",
+				"dweb:/ipfs/Qmbky9zBbETruuENoTqouNPNyFjjHGjz8g4pUipKCZyoMT"
+			]
+		}
+	},
+	"version": 1
+}

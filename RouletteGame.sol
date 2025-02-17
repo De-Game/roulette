@@ -10,7 +10,7 @@ contract RouletteGame {
     uint8 private constant RESULT_COUNT = 38;
 
     uint8 private constant OPTION_MAX = 49;
-
+    
     // Bet Options for the roulette
     // 0 to 36 and 00 (represented as 37);
     uint8 private constant OPTION_STRAIGHT_UP_ZERO = 0;
@@ -412,7 +412,7 @@ contract RouletteGame {
     uint8 private constant STATUS_NO_MORE_BETS = 2;
     uint8 private constant STATUS_RESULT_GENERATED = 3;
     uint8 private constant STATUS_RESULT_VALIDATED = 4;
-
+    uint8 private constant STATUS_CANCELED = 5;
     // Offset to make the result immutable
     uint8 private constant BLOCK_NUMBER_OFFSET = 12;
 
@@ -432,6 +432,8 @@ contract RouletteGame {
     event ResultValidated(uint8 result);
     event BetPayout(address indexed player, uint8 option, uint256 amount);
     event GameEnded(address indexed host, uint256 amount);
+    event ResultMismatch(uint8 recomputedResult, uint8 result);
+    event BetCancelled(string rsn, address indexed player, uint256 amount);
     // New event to prove step-by-step hashing
     event ProofStep(
         uint8 stepIndex,
@@ -462,7 +464,11 @@ contract RouletteGame {
     uint8 public validate_threshold;
     //validator arry
     address[] public validators;
-    address[] public signedValidators;
+    address[] public matchedValidators;
+    address[] public mismatchedValidators;
+    // Track who has matched vs. mismatched (one-time)
+    mapping(address => bool) public matchSigners;
+    mapping(address => bool) public mismatchSigners;
     //mini
     uint256 public minDeposite;
     //max deposite (optional?)
@@ -819,76 +825,64 @@ contract RouletteGame {
         // ----------------------------------
         // STEP 6: Ensure matches the stored result
         // ----------------------------------
-        require(
+
+
+        // ----------------------------------
+        // Check mismatch
+        // ----------------------------------
+        if (recomputedResult != result) {
+             require(
+            !mismatchSigners[msg.sender],
+            "Validator already signed mismatch"
+            );
+            //add signature to confirm mismatch
+            mismatchedValidators.push(msg.sender);
+            mismatchSigners[msg.sender] = true;
+            emit ResultMismatch(recomputedResult, result);
+
+            if (mismatchedValidators.length >= validate_threshold) {
+            // 1. Refund all bets
+            for (uint256 i = 0; i < bets.length; i++) {
+                Bet memory b = bets[i];
+                // Return b.amount to the gambler
+                (bool success, ) = b.player.call{value: b.amount}("");
+                // 2. Emit an event to signal mismatch/refund
+                emit BetCancelled("Refund",b.player, b.amount);
+                require(success, "Refund to gambler failed");
+            }
+            emit BetCancelled("Refund to host",host, address(this).balance);
+            payable(host).transfer(address(this).balance);
+            // 3. Mark the game invalid/canceled (optional)
+            status = STATUS_CANCELED; 
+
+            // 4. End the function without reverting
+            return;
+            }
+
+        }else{
+            require(
+             !matchSigners[msg.sender],
+            "Validator already signed matched"
+            );
+            require(
             recomputedResult == result,
             "Stored result != recomputed result"
-        );
+            );
 
-        // Record this validator's signature
-        signedValidators.push(msg.sender);
-
-        // If enough signatures, finalize
-        if (signedValidators.length >= validate_threshold) {
-            emit ResultValidated(result);
-            status = STATUS_RESULT_VALIDATED;
-            settleBet();
+            // Record this validator's signature
+            matchedValidators.push(msg.sender);
+            matchSigners[msg.sender] = true;
+            
+            // If enough signatures, finalize
+            if (matchedValidators.length >= validate_threshold) {
+                emit ResultValidated(result);
+                status = STATUS_RESULT_VALIDATED;
+                settleBet();
+            }
         }
+        
     }
-    /*function validateResult() public {
-        require(status == STATUS_RESULT_GENERATED, "Result not generated");
-        require(block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 12, "Wait at least 12 blocks");
-        require(isValidator(msg.sender), "Only a validator can validate");
-
-        uint256 usedBlockNumber = cutOffBlockNumber + 1;
-        bytes32 randomBlockHash = blockhash(usedBlockNumber);
-
-        emit ProofStepStringified(string(abi.encodePacked(
-            "Step 1: Blockhash from block #", _uint2str(usedBlockNumber), " = ", _bytes32ToHexString(randomBlockHash)
-        )));
-
-        address[] memory addrList = new address[](bets.length + 1);
-        addrList[0] = host;
-        for (uint256 i = 0; i < bets.length; i++) {
-            addrList[i + 1] = bets[i].player;
-        }
-
-        emit ProofStepStringified(string(abi.encodePacked(
-            "Step 2: Addresses used in randomness = ", _addressesToString(addrList)
-        )));
-
-        bytes memory packedData = abi.encodePacked(host);
-        for (uint256 j = 0; j < bets.length; j++) {
-            packedData = abi.encodePacked(packedData, bets[j].player);
-        }
-
-        emit ProofStepStringified(string(abi.encodePacked(
-            "Step 3: Keccak256 input: blockhash + packedData"
-        )));
-
-        bytes32 randomHash = keccak256(abi.encodePacked(randomBlockHash, packedData));
-
-        emit ProofStepStringified(string(abi.encodePacked(
-            "Step 4: Keccak256 output = ", _bytes32ToHexString(randomHash)
-        )));
-
-        uint256 randomNumber = uint256(randomHash);
-        uint8 recomputedResult = uint8(randomNumber % RESULT_COUNT);
-
-        emit ProofStepStringified(string(abi.encodePacked(
-            "Step 5: Final outcome (mod ", _uint2str(RESULT_COUNT), ") = ", _uint2str(recomputedResult)
-        )));
-
-        require(recomputedResult == result, "Stored result != recomputed result");
-
-        signedValidators.push(msg.sender);
-
-        if (signedValidators.length >= validate_threshold) {
-            emit ResultValidated(result);
-            status = STATUS_RESULT_VALIDATED;
-            settleBet();
-        }
-    }*/
-    //
+    
     function settleBet() public {
         require(status == STATUS_RESULT_VALIDATED, "Result not validated yet");
 
