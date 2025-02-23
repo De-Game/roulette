@@ -401,10 +401,10 @@ contract RouletteGame {
     uint256 private constant PAYOUT_EVEN_OR_ODD = 20;
 
     // payout for columns
-    uint256 private constant PAYOUT_COLUMNS = 15;
+    uint256 private constant PAYOUT_COLUMNS = 30;
 
     // payout for dozen
-    uint256 private constant PAYOUT_DOZEN = 15;
+    uint256 private constant PAYOUT_DOZEN = 30;
 
     // Status
     uint8 private constant STATUS_PENDING_HOST_DEPOSIT = 0;
