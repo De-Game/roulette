@@ -412,6 +412,7 @@ contract RouletteGame {
     // *----------------------------------
 
     constructor(
+        address _owner,
         address _host,
         uint256 _minBet,
         uint256 _minDeposit,
@@ -428,7 +429,7 @@ contract RouletteGame {
         validators = _validators;
         validatorThreshold = _validatorThreshold;
         status = STATUS_PENDING_HOST_DEPOSIT;
-        owner = msg.sender;
+        owner = _owner;
         emit GameCreated(
             _host,
             _minBet,
@@ -810,7 +811,7 @@ contract RouletteGame {
             "Result cannot be generated before the required block number is reached."
         );
 
-        require(msg.sender == owner, "Only owner can generate result.");
+        require(msg.sender == host, "Only host can generate result.");
 
         // * get the block hash of the earlier block
         uint256 usedBlockNumber = cutOffBlockNumber + 1;

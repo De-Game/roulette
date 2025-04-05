@@ -20,6 +20,7 @@ contract RouletteGameFactory {
         uint8 _validThreshold
     ) public {
         RouletteGame game = new RouletteGame(
+            msg.sender,
             _host,
             _minBet,
             _minDeposit,
