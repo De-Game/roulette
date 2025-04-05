@@ -2,17 +2,18 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 contract RouletteGame {
-    // ----------------------------------
-    // Constants
-    // ----------------------------------
+    // * ----------------------------------
+    // * Constants
+    // *----------------------------------
 
-    // 0 to 36 and 00 (represented as 37);
+    // * the random result generated ranges from 0 to 37 (result of "00" is represented as 37);
     uint8 private constant RESULT_COUNT = 38;
 
-    uint8 private constant OPTION_MAX = 49;
-    
-    // Bet Options for the roulette
-    // 0 to 36 and 00 (represented as 37);
+    // * ----------------------------------
+    // * Bet Options Constants
+    // *----------------------------------
+
+    // * straight up bet
     uint8 private constant OPTION_STRAIGHT_UP_ZERO = 0;
     uint8 private constant OPTION_STRAIGHT_UP_ONE = 1;
     uint8 private constant OPTION_STRAIGHT_UP_TWO = 2;
@@ -52,70 +53,22 @@ contract RouletteGame {
     uint8 private constant OPTION_STRAIGHT_UP_THIRTY_SIX = 36;
     uint8 private constant OPTION_STRAIGHT_UP_ZERO_ZERO = 37;
 
-    // Low or High
+    // * low bet
     uint8 private constant OPTION_LOW = 38;
-    uint8[18] public OPTION_LOW_SET = [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18
-    ];
-    function isInLowSet(uint8 number) public view returns (bool) {
-        for (uint8 i = 0; i < OPTION_LOW_SET.length; i++) {
-            if (OPTION_LOW_SET[i] == number) {
-                return true; // Number found in the set
-            }
-        }
-        return false; // Number not found in the set
+
+    function isInLowSet(uint8 number) public pure returns (bool) {
+        return number >= 1 && number <= 18;
     }
 
+    // * high bet
     uint8 private constant OPTION_HIGH = 39;
-    uint8[18] public OPTION_HIGH_SET = [
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36
-    ];
-    function isInHighSet(uint8 number) public view returns (bool) {
-        for (uint8 i = 0; i < OPTION_HIGH_SET.length; i++) {
-            if (OPTION_HIGH_SET[i] == number) {
-                return true; // Number found in the set
-            }
-        }
-        return false; // Number not found in the set
+    function isInHighSet(uint8 number) public pure returns (bool) {
+        return number >= 19 && number <= 36;
     }
 
-    // Red or Black
+    // * red bet
     uint8 private constant OPTION_RED = 40;
-    uint8[18] public OPTION_RED_SET = [
+    uint8[18] private OPTION_RED_SET = [
         1,
         3,
         5,
@@ -138,14 +91,15 @@ contract RouletteGame {
     function isInRedSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_RED_SET.length; i++) {
             if (OPTION_RED_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
+    // * black bet
     uint8 private constant OPTION_BLACK = 41;
-    uint8[18] public OPTION_BLACK_SET = [
+    uint8[18] private OPTION_BLACK_SET = [
         2,
         4,
         6,
@@ -168,76 +122,30 @@ contract RouletteGame {
     function isInBlackSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_BLACK_SET.length; i++) {
             if (OPTION_BLACK_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
-    // Even or Odd
+    // * even bet
     uint8 private constant OPTION_EVEN = 42;
-    uint8[18] public OPTION_EVEN_SET = [
-        2,
-        4,
-        6,
-        8,
-        10,
-        12,
-        14,
-        16,
-        18,
-        20,
-        22,
-        24,
-        26,
-        28,
-        30,
-        32,
-        34,
-        36
-    ];
-    function isInEvenSet(uint8 number) public view returns (bool) {
-        for (uint8 i = 0; i < OPTION_EVEN_SET.length; i++) {
-            if (OPTION_EVEN_SET[i] == number) {
-                return true; // Number found in the set
-            }
-        }
-        return false; // Number not found in the set
+
+    function isInEvenSet(uint8 number) public pure returns (bool) {
+        // Check if number is even and between 2-36
+        return number > 0 && number < 37 && number % 2 == 0;
     }
 
+    // * odd bet
     uint8 private constant OPTION_ODD = 43;
-    uint8[18] public OPTION_ODD_SET = [
-        1,
-        3,
-        5,
-        7,
-        9,
-        11,
-        13,
-        15,
-        17,
-        19,
-        21,
-        23,
-        25,
-        27,
-        29,
-        31,
-        33,
-        35
-    ];
-    function isInOddSet(uint8 number) public view returns (bool) {
-        for (uint8 i = 0; i < OPTION_ODD_SET.length; i++) {
-            if (OPTION_ODD_SET[i] == number) {
-                return true; // Number found in the set
-            }
-        }
-        return false; // Number not found in the set
+    function isInOddSet(uint8 number) public pure returns (bool) {
+        // Check if number is odd and between 1-35
+        return number > 0 && number < 37 && number % 2 != 0;
     }
 
-    // Columns
+    // * first column bet
     uint8 private constant OPTION_FIRST_COLUMN = 44;
-    uint8[12] public OPTION_FIRST_COLUMN_SET = [
+    uint8[12] private OPTION_FIRST_COLUMN_SET = [
         1,
         4,
         7,
@@ -254,14 +162,15 @@ contract RouletteGame {
     function isInFirstColumnSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_FIRST_COLUMN_SET.length; i++) {
             if (OPTION_FIRST_COLUMN_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
+    // * second column bet
     uint8 private constant OPTION_SECOND_COLUMN = 45;
-    uint8[12] public OPTION_SECOND_COLUMN_SET = [
+    uint8[12] private OPTION_SECOND_COLUMN_SET = [
         2,
         5,
         8,
@@ -278,14 +187,15 @@ contract RouletteGame {
     function isInSecondColumnSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_SECOND_COLUMN_SET.length; i++) {
             if (OPTION_SECOND_COLUMN_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
+    // * third column bet
     uint8 private constant OPTION_THIRD_COLUMN = 46;
-    uint8[12] public OPTION_THIRD_COLUMN_SET = [
+    uint8[12] private OPTION_THIRD_COLUMN_SET = [
         3,
         6,
         9,
@@ -302,15 +212,15 @@ contract RouletteGame {
     function isInThirdColumnSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_THIRD_COLUMN_SET.length; i++) {
             if (OPTION_THIRD_COLUMN_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
-    // Dozen
+    // * first dozen bet
     uint8 private constant OPTION_FIRST_DOZEN = 47;
-    uint8[12] public OPTION_FIRST_DOZEN_SET = [
+    uint8[12] private OPTION_FIRST_DOZEN_SET = [
         1,
         2,
         3,
@@ -330,11 +240,12 @@ contract RouletteGame {
                 return true; // Number found in the set
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
+    // * second dozen bet
     uint8 private constant OPTION_SECOND_DOZEN = 48;
-    uint8[12] public OPTION_SECOND_DOZEN_SET = [
+    uint8[12] private OPTION_SECOND_DOZEN_SET = [
         13,
         14,
         15,
@@ -351,14 +262,15 @@ contract RouletteGame {
     function isInSecondDozenSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_SECOND_DOZEN_SET.length; i++) {
             if (OPTION_SECOND_DOZEN_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
+    // * third dozen bet
     uint8 private constant OPTION_THIRD_DOZEN = 49;
-    uint8[12] public OPTION_THIRD_DOZEN_SET = [
+    uint8[12] private OPTION_THIRD_DOZEN_SET = [
         25,
         26,
         27,
@@ -375,126 +287,162 @@ contract RouletteGame {
     function isInThirdDozenSet(uint8 number) public view returns (bool) {
         for (uint8 i = 0; i < OPTION_THIRD_DOZEN_SET.length; i++) {
             if (OPTION_THIRD_DOZEN_SET[i] == number) {
-                return true; // Number found in the set
+                return true;
             }
         }
-        return false; // Number not found in the set
+        return false;
     }
 
-    // Payout
-    // Maximum odds is 37
-    uint256 private constant PAYOUT_MAX = 360;
+    // * ----------------------------------
+    // * Transaction Constants
+    // *----------------------------------
 
-    // scaling factor because solidity did not support floating number
-    uint256 private constant PAYOUT_SCALE_FACTOR = 10;
+    // * maximum payout ratio
+    uint256 private constant PAYOUT_RATIO_MAX = 36;
 
-    // payout for straight up
-    uint256 private constant PAYOUT_STRAIGHT_UP = 360;
+    // * payout ratio for straight up bet
+    uint256 private constant PAYOUT_RATIO_STRAIGHT_UP = 36;
 
-    // payout for low or high
-    uint256 private constant PAYOUT_LOW_OR_HIGH = 20;
+    // * payout ratio for low or high bet
+    uint256 private constant PAYOUT_RATIO_LOW_OR_HIGH = 2;
 
-    // payout for red or black
-    uint256 private constant PAYOUT_RED_OR_BLACK = 20;
+    // * payout ratio for red or black bet
+    uint256 private constant PAYOUT_RATIO_RED_OR_BLACK = 2;
 
-    // payout for even or odd
-    uint256 private constant PAYOUT_EVEN_OR_ODD = 20;
+    // * payout ratio for even or odd bet
+    uint256 private constant PAYOUT_RATIO_EVEN_OR_ODD = 2;
 
-    // payout for columns
-    uint256 private constant PAYOUT_COLUMNS = 30;
+    // * payout ratio for columns bet
+    uint256 private constant PAYOUT_RATIO_COLUMNS = 3;
 
-    // payout for dozen
-    uint256 private constant PAYOUT_DOZEN = 30;
+    // * payout ratio for dozen bet
+    uint256 private constant PAYOUT_RATIO_DOZEN = 3;
 
-    // Status
+    // * ----------------------------------
+    // * Status Constants
+    // *----------------------------------
+
     uint8 private constant STATUS_PENDING_HOST_DEPOSIT = 0;
     uint8 private constant STATUS_PENDING_PLAYER_BET = 1;
     uint8 private constant STATUS_NO_MORE_BETS = 2;
     uint8 private constant STATUS_RESULT_GENERATED = 3;
     uint8 private constant STATUS_RESULT_VALIDATED = 4;
     uint8 private constant STATUS_CANCELED = 5;
-    // Offset to make the result immutable
+    uint8 private constant STATUS_GAME_FINISHED = 6;
+
+    // * offset to make the result immutable
     uint8 private constant BLOCK_NUMBER_OFFSET = 12;
 
-    // ----------------------------------
-    // Events
-    // ----------------------------------
+    // * ----------------------------------
+    // * Events
+    // *----------------------------------
     event GameCreated(
         address indexed host,
         uint256 minBet,
+        uint256 minDeposit,
         address[] validators,
-        uint8 valid_threshold
+        uint8 validatorThreshold
     );
-    event DepositPlaced(address indexed host, uint256 amount);
-    event BetPlaced(address indexed player, uint8 option, uint256 amount);
-    event NoMoreBets(uint256 cutOffBlockNumber);
-    event ResultGenerated(uint8 result);
-    event ResultValidated(uint8 result);
-    event BetPayout(address indexed player, uint8 option, uint256 amount);
-    event GameEnded(address indexed host, uint256 amount);
-    event ResultMismatch(uint8 recomputedResult, uint8 result);
-    event BetCancelled(string rsn, address indexed player, uint256 amount);
-    // New event to prove step-by-step hashing
-    event ProofStep(
-        uint8 stepIndex,
-        string explanation,
-        bytes intermediateHash
-    );
-    //event ProofStepStringified(string stepDetails);
+    event DepositPlaced(address indexed host, uint256 amount, uint256 maxBet);
+    event DepositRefund(address indexed host, uint256 amount, string reason);
+    event DepositPayout(address indexed host, uint256 amount);
 
-    // ----------------------------------
-    // Struct
-    // ----------------------------------
+    event BetPlaced(address indexed player, uint8 option, uint256 amount);
+    event BetRefund(address indexed player, uint256 amount, string reason);
+    event BetPayout(address indexed player, uint8 option, uint256 amount);
+
+    event NoMoreBets(uint256 cutOffBlockNumber);
+    event ResultGenerated(uint8 generatedResult);
+
+    event ResultAccepted(
+        address indexed validator,
+        uint8 generatedResult,
+        uint8 validatedResult
+    );
+    event ResultRejected(
+        address indexed validator,
+        uint8 generatedResult,
+        uint8 validatedResult
+    );
+
+    event ResultValidated(uint8 validatedResult);
+
+    event GameCanceled(string reason);
+
+    // New event to prove step-by-step hashing
+    event ValidationLog(
+        address indexed validator,
+        uint8 stepIndex,
+        bool isSuccess,
+        string message
+    );
+
+    event GameFinished();
+
+    // * ----------------------------------
+    // * Struct
+    // *----------------------------------
+
+    // * struct for bet
     struct Bet {
         address player;
-        uint8 option; // option: [0, 37], where 0-36 are the numbers and 37 is 00
+        uint8 option; // * options: range from 0 to 49
         uint256 amount;
     }
 
-    // ----------------------------------
-    // Variables
-    // ----------------------------------
-    address public host;
-    uint256 public minBet;
+    // * ----------------------------------
+    // * Variables
+    // *----------------------------------
+    address public owner;
     uint8 public status;
-    Bet[] public bets;
+    uint256 public minDeposit;
+    uint256 public minBet;
+    uint256 public maxBet;
     uint256 public cutOffBlockNumber;
     uint8 public result;
-    //add threshold
-    uint8 public validate_threshold;
-    //validator arry
+    uint8 public validatorThreshold;
+    address public host;
+    Bet[] public bets;
     address[] public validators;
-    address[] public matchedValidators;
-    address[] public mismatchedValidators;
-    // Track who has matched vs. mismatched (one-time)
-    mapping(address => bool) public matchSigners;
-    mapping(address => bool) public mismatchSigners;
-    //mini
-    uint256 public minDeposite;
-    //max deposite (optional?)
-    uint256 public maxBet;
+    address[] public approvedValidators;
+    address[] public rejectedValidators;
 
-    // ----------------------------------
-    // Constructor
-    // ----------------------------------
-    //**** Tempory allow input the validator address for testing purpose
+    // * ----------------------------------
+    // * Constructor
+    // *----------------------------------
+
     constructor(
         address _host,
         uint256 _minBet,
+        uint256 _minDeposit,
         address[] memory _validators,
-        uint8 _valid_threshold
+        uint8 _validatorThreshold
     ) {
+        require(
+            _validatorThreshold <= _validators.length,
+            "Validator threshold cannot be greater than the number of validators."
+        );
         host = _host;
         minBet = _minBet;
-        status = STATUS_PENDING_HOST_DEPOSIT;
+        minDeposit = _minDeposit;
         validators = _validators;
-        validate_threshold = _valid_threshold;
-        emit GameCreated(_host, _minBet, _validators, _valid_threshold);
+        validatorThreshold = _validatorThreshold;
+        status = STATUS_PENDING_HOST_DEPOSIT;
+        owner = msg.sender;
+        emit GameCreated(
+            _host,
+            _minBet,
+            _minDeposit,
+            _validators,
+            _validatorThreshold
+        );
     }
-    // ----------------------------------
-    // Private / Internal Functions
-    // ----------------------------------
-    function _uint2str(uint256 _i) private pure returns (string memory) {
+    // * ----------------------------------
+    // * Private Functions (Type Conversion)
+    // *----------------------------------
+
+    // * function to convert uint256 to string
+    function _uint256ToString(uint256 _i) private pure returns (string memory) {
         if (_i == 0) {
             return "0"; // Ensure zero is handled correctly
         }
@@ -522,6 +470,8 @@ contract RouletteGame {
 
         return string(bstr);
     }
+
+    // * function to convert bytes32 to hex string
     function _bytes32ToHexString(
         bytes32 data
     ) private pure returns (string memory) {
@@ -537,6 +487,7 @@ contract RouletteGame {
         return string(str);
     }
 
+    // * function to convert bytes to hex string
     function _bytesToHexString(
         bytes memory data
     ) private pure returns (string memory) {
@@ -593,9 +544,175 @@ contract RouletteGame {
         add_result = abi.encodePacked(add_result, "]");
         return string(add_result);
     }
-    // ----------------------------------
-    // Public / External Functions
-    // ----------------------------------
+
+    // * ----------------------------------
+    // * Private Functions (Game Logic)
+    // *----------------------------------
+
+    // * function to refund all transactions
+    function refundAllTransactions(string memory reason) private {
+        // * refund all bets
+        for (uint256 i = 0; i < bets.length; i++) {
+            payable(bets[i].player).transfer(bets[i].amount);
+            emit BetRefund(bets[i].player, bets[i].amount, reason);
+        }
+        // * refund the host deposit
+        uint256 remainingBalance = address(this).balance;
+        if (remainingBalance > 0) {
+            payable(host).transfer(remainingBalance);
+            emit DepositRefund(host, remainingBalance, reason);
+        }
+        status = STATUS_CANCELED;
+        emit GameCanceled(reason);
+    }
+
+    // * function to check if the caller is a validator
+    function isAssignableValidator(
+        address _caller
+    ) private view returns (bool) {
+        bool isValidator = false;
+        for (uint256 i = 0; i < validators.length; i++) {
+            if (validators[i] == _caller) {
+                isValidator = true;
+                break;
+            }
+        }
+        // * if the caller is not a validator, return false
+        if (!isValidator) {
+            return false;
+        }
+        // * if the caller is already in the approved validators list, return false
+        for (uint256 i = 0; i < approvedValidators.length; i++) {
+            if (approvedValidators[i] == _caller) {
+                return false;
+            }
+        }
+        // * if the caller is already in the rejected validators list, return false
+        for (uint256 i = 0; i < rejectedValidators.length; i++) {
+            if (rejectedValidators[i] == _caller) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function settleBet() private {
+        require(
+            status == STATUS_RESULT_VALIDATED,
+            "Bet can not be settled in current status."
+        );
+
+        for (uint256 i = 0; i < bets.length; i++) {
+            uint8 option = bets[i].option;
+            uint256 amount = bets[i].amount;
+            address player = bets[i].player;
+            if (
+                option >= OPTION_STRAIGHT_UP_ZERO &&
+                option <= OPTION_STRAIGHT_UP_ZERO_ZERO
+            ) {
+                // * winning straight up option
+                if (option == result) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_STRAIGHT_UP;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_LOW) {
+                // * winning low option
+                if (isInLowSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_LOW_OR_HIGH;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_HIGH) {
+                // * winning high option
+                if (isInHighSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_LOW_OR_HIGH;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_RED) {
+                // * winning red option
+                if (isInRedSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_RED_OR_BLACK;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_BLACK) {
+                // * winning black option
+                if (isInBlackSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_RED_OR_BLACK;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_EVEN) {
+                // * winning even option
+                if (isInEvenSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_EVEN_OR_ODD;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_ODD) {
+                // * winning odd option
+                if (isInOddSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_EVEN_OR_ODD;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_FIRST_COLUMN) {
+                // * winning first column option
+                if (isInFirstColumnSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_COLUMNS;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_SECOND_COLUMN) {
+                // * winning second column option
+                if (isInSecondColumnSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_COLUMNS;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_THIRD_COLUMN) {
+                // * winning third column option
+                if (isInThirdColumnSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_COLUMNS;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_FIRST_DOZEN) {
+                // * winning first dozen option
+                if (isInFirstDozenSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_DOZEN;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_SECOND_DOZEN) {
+                // * winning second dozen option
+                if (isInSecondDozenSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_DOZEN;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            } else if (option == OPTION_THIRD_DOZEN) {
+                // * winning third dozen option
+                if (isInThirdDozenSet(result)) {
+                    uint256 winningPayout = amount * PAYOUT_RATIO_DOZEN;
+                    payable(player).transfer(winningPayout);
+                    emit BetPayout(player, option, winningPayout);
+                }
+            }
+        }
+        // * transfer the host's balance to the host
+        uint256 hostBalance = address(this).balance;
+        payable(host).transfer(hostBalance);
+        emit DepositPayout(host, hostBalance);
+        status = STATUS_GAME_FINISHED;
+        return;
+    }
+
+    // * ----------------------------------
+    // * Public Functions
+    // *----------------------------------
     function getStatus() public view returns (uint8) {
         return status;
     }
@@ -615,462 +732,250 @@ contract RouletteGame {
     function deposit() public payable {
         require(
             status == STATUS_PENDING_HOST_DEPOSIT,
-            "Deposit is not allowed"
+            "Deposit can not be placed in current status."
         );
-        require(msg.sender == host, "Only host can deposit");
-        require(msg.value > 0, "Invalid deposit amount");
-
+        require(msg.sender == host, "Only host can deposit.");
+        require(
+            msg.value >= minDeposit,
+            "Deposit amount is below the minimum deposit."
+        );
+        // * calculate the maximum accepted (commitable) bet amount based on the deposit amount
+        maxBet =
+            (msg.value - (msg.value % PAYOUT_RATIO_MAX)) /
+            PAYOUT_RATIO_MAX;
         status = STATUS_PENDING_PLAYER_BET;
-        emit DepositPlaced(msg.sender, msg.value);
+        emit DepositPlaced(msg.sender, msg.value, maxBet);
+    }
+
+    function withdraw() public {
+        require(
+            status == STATUS_PENDING_PLAYER_BET,
+            "Withdraw can not be called in current status."
+        );
+        require(msg.sender == host, "Only host can withdraw.");
+        refundAllTransactions("Withdrawal requested by host.");
+        return;
     }
 
     function placeBet(uint8 option) public payable {
-        require(option <= 49, "Option must be between 0 and 37");
-        require(msg.value >= minBet, "Bet amount is below the minimum bet");
         require(
-            msg.value <
-                (address(this).balance * PAYOUT_MAX) / PAYOUT_SCALE_FACTOR,
-            "Bet amount is above the maximum bet"
+            status == STATUS_PENDING_PLAYER_BET,
+            "Bet can not be placed in current status."
         );
-
-        bets.push(Bet({player: msg.sender, option: option, amount: msg.value}));
+        require(option <= 49, "Option must be between 0 and 49");
+        require(
+            msg.value >= minBet,
+            "Bet amount cannot be less than the minimum bet amount."
+        );
+        require(
+            msg.value < maxBet,
+            "Bet amount cannot exceed the maximum bet amount."
+        );
+        Bet memory playerBet = Bet({
+            player: msg.sender,
+            option: option,
+            amount: msg.value
+        });
+        bets.push(playerBet);
         emit BetPlaced(msg.sender, option, msg.value);
 
-        // Assume only one player versus the host, we can directly call noMoreBets, i.e. no need to wait for the host to call it
-        noMoreBets();
+        // * assume player versus host in 1-to-1, the bet cut off once any player placed a bet
+        return noMoreBets();
     }
 
     function noMoreBets() public {
-        require(status == STATUS_PENDING_PLAYER_BET, "No more bets allowed");
+        require(
+            status == STATUS_PENDING_PLAYER_BET,
+            "Bet cut off can not be placed in current status."
+        );
 
-        // Assume only one player versus the host, we can directly call noMoreBets, i.e. no need to wait for the host to call it
-        // require(msg.sender == host, "Only host can call no more bets");
+        // * assume player versus host in 1-to-1, the bet cut off once any player placed a bet
+        //// require(msg.sender == host, "Only host can call no more bets");
 
         status = STATUS_NO_MORE_BETS;
+        // * set the cut off block number to the current block number
         cutOffBlockNumber = block.number;
         emit NoMoreBets(cutOffBlockNumber);
     }
 
-    // wait at least 12 blocks before calling this function
+    // * wait at least 12 blocks before calling this function
     function generateResult() public {
-        require(status == STATUS_NO_MORE_BETS, "No more bets allowed");
-        require(msg.sender == host, "Only host can generate result");
-
-        // Ensure the block number is reached for randomness
+        require(
+            status == STATUS_NO_MORE_BETS,
+            "Result cannot be generated in current status."
+        );
+        // * ensure the block number is reached for randomness
         require(
             block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 1,
-            "Block number not reached"
+            "Result cannot be generated before the required block number is reached."
         );
 
-        // Get the block hash of the earlier block
-        bytes32 randomBlockHash = blockhash(cutOffBlockNumber + 1);
+        require(msg.sender == owner, "Only owner can generate result.");
 
-        // we use host address and player address to generate random hash as salt
+        // * get the block hash of the earlier block
+        uint256 usedBlockNumber = cutOffBlockNumber + 1;
+        bytes32 randomBlockHash = blockhash(usedBlockNumber);
+        if (randomBlockHash == bytes32(0)) {
+            refundAllTransactions("Block hash is not available.");
+            return;
+        }
+
+        // * add salt to the random hash
+        // * add host address as part of the salt
         bytes memory packedData = abi.encodePacked(host);
+        // * add player addresses as part of the salt
         for (uint256 i = 0; i < bets.length; i++) {
             packedData = abi.encodePacked(packedData, bets[i].player);
         }
 
+        // * generate the random hash
         bytes32 randomHash = keccak256(
             abi.encodePacked(randomBlockHash, packedData)
         );
 
-        //adding RNG???
-
-        // Naive pseudo-randomness based on the blockhash
+        // * naive pseudo-randomness based on the blockhash
         uint256 randomNumber = uint256(randomHash);
-        result = uint8(randomNumber % RESULT_COUNT); // Random number between 0 and 37
-
+        result = uint8(randomNumber % RESULT_COUNT); // * create a random number between 0 and 37 (38 numbers in total).
         status = STATUS_RESULT_GENERATED;
         emit ResultGenerated(result);
     }
 
-    // this function should be called by third party validator for mulitple signature validation
-    // ----------------------------------
-    // Validator Logic
-    // ----------------------------------
-    function isValidator(address _caller) internal view returns (bool) {
-        for (uint256 i = 0; i < validators.length; i++) {
-            if (validators[i] == _caller) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @dev validateResult re-computes the random hash in a step-by-step manner.
-     *      For each step, it emits a ProofStep event with a layman-friendly message
-     *      and the raw data used at that step for verification.
-     *
-     *      This version also:
-     *       - Prints the exact block number used.
-     *       - Shows the blockhash in hex form.
-     *       - Shows the array of addresses (host + players) in a bracketed list.
-     *       - Emits the raw data in the event logs for cryptographic verification.
-     */
     function validateResult() public {
-        // Ensure the result was already generated
-        require(status == STATUS_RESULT_GENERATED, "Result not generated");
-
-        // Ensure we have waited at least the required blocks
         require(
-            block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 1,
-            "Wait at least 12 blocks after generation"
+            status == STATUS_RESULT_GENERATED,
+            "Result can not be validated in current status."
         );
 
-        // Only designated validators can validate
-        require(isValidator(msg.sender), "Only a validator can validate");
+        // * only designated validators can validate
+        require(
+            isAssignableValidator(msg.sender),
+            "Only validators can validate the result."
+        );
 
-        // ----------------------------------
-        // STEP 1: Retrieve the block hash from (cutOffBlockNumber + 1)
-        // ----------------------------------
+        // * retrieve the block hash from (cutOffBlockNumber + 1)
         uint256 usedBlockNumber = cutOffBlockNumber + 1;
         bytes32 randomBlockHash = blockhash(usedBlockNumber);
 
-        // Emit block number + blockhash in a readable explanation
-        emit ProofStep(
+        // * if the block hash is not available, refund all transactions
+        if (randomBlockHash == bytes32(0)) {
+            emit ValidationLog(
+                msg.sender,
+                1,
+                false,
+                "Block hash is not available."
+            );
+            refundAllTransactions("Block hash is not available.");
+            return;
+        }
+
+        // * add the validation log for step 1
+        emit ValidationLog(
+            msg.sender,
             1,
+            true,
             string(
                 abi.encodePacked(
-                    "Blockhash from block #",
-                    _uint2str(usedBlockNumber),
-                    ": ",
-                    _bytes32ToHexString(randomBlockHash),
-                    " - basis for randomness"
+                    "Blockhash of cut-off block #",
+                    _uint256ToString(usedBlockNumber),
+                    " is ",
+                    _bytes32ToHexString(randomBlockHash)
                 )
-            ),
-            // The data field: both the numeric block number and the bytes32 blockhash
-            abi.encode(usedBlockNumber, randomBlockHash)
+            )
         );
 
-        // ----------------------------------
-        // STEP 2: Gather addresses into an array [host, all players]
-        // ----------------------------------
+        // * add the validation log for step 2
         address[] memory addrList = new address[](bets.length + 1);
         addrList[0] = host;
         for (uint256 i = 0; i < bets.length; i++) {
             addrList[i + 1] = bets[i].player;
         }
 
-        // Convert the address array to a bracketed list for readability
+        // * convert the address array to a bracketed list for readability
         string memory addrListString = _addressesToString(addrList);
 
-        // Also build the "packed" bytes as done in generateResult() for hashing
+        emit ValidationLog(
+            msg.sender,
+            2,
+            true,
+            string(
+                abi.encodePacked(
+                    "Addresses included in the packed data: ",
+                    addrListString
+                )
+            )
+        );
+
+        // * add the validation log for step 3
         bytes memory packedData = abi.encodePacked(host);
         for (uint256 j = 0; j < bets.length; j++) {
             packedData = abi.encodePacked(packedData, bets[j].player);
         }
 
-        // Emit the array in bracketed string form, raw array data in the event logs
-        emit ProofStep(
-            2,
-            string(
-                abi.encodePacked(
-                    "Addresses used for randomness: ",
-                    addrListString
-                )
-            ),
-            abi.encode(addrList) // raw array
-        );
-
-        // Optionally, show the packed data in hex form too
-        emit ProofStep(
+        emit ValidationLog(
+            msg.sender,
             3,
+            true,
             string(
                 abi.encodePacked(
                     "Packed data of addresses in hex: ",
                     _bytesToHexString(packedData)
                 )
-            ),
-            packedData
+            )
         );
 
-        // ----------------------------------
-        // STEP 4: keccak256 of [blockhash + packedData]
-        // ----------------------------------
+        // * add the validation log for step 4
         bytes32 randomHash = keccak256(
             abi.encodePacked(randomBlockHash, packedData)
         );
-        emit ProofStep(
+
+        emit ValidationLog(
+            msg.sender,
             4,
+            true,
             string(
                 abi.encodePacked(
                     "Keccak256 of [blockhash + packedData]: ",
                     _bytes32ToHexString(randomHash)
                 )
-            ),
-            abi.encode(randomHash)
+            )
         );
 
-        // ----------------------------------
-        // STEP 5: Take that hash % RESULT_COUNT for final outcome
-        // ----------------------------------
+        // * add the validation log for step 5
         uint256 randomNumber = uint256(randomHash);
         uint8 recomputedResult = uint8(randomNumber % RESULT_COUNT);
-
-        emit ProofStep(
+        emit ValidationLog(
+            msg.sender,
             5,
+            true,
             string(
                 abi.encodePacked(
                     "Final random outcome (mod ",
-                    _uint2str(RESULT_COUNT),
+                    _uint256ToString(RESULT_COUNT),
                     "): ",
-                    _uint2str(recomputedResult)
+                    _uint256ToString(recomputedResult)
                 )
-            ),
-            abi.encode(recomputedResult)
+            )
         );
 
-        // ----------------------------------
-        // STEP 6: Ensure matches the stored result
-        // ----------------------------------
-
-
-        // ----------------------------------
-        // Check mismatch
-        // ----------------------------------
         if (recomputedResult != result) {
-             require(
-            !mismatchSigners[msg.sender],
-            "Validator already signed mismatch"
-            );
-            //add signature to confirm mismatch
-            mismatchedValidators.push(msg.sender);
-            mismatchSigners[msg.sender] = true;
-            emit ResultMismatch(recomputedResult, result);
-
-            if (mismatchedValidators.length >= validate_threshold) {
-            // 1. Refund all bets
-            for (uint256 i = 0; i < bets.length; i++) {
-                Bet memory b = bets[i];
-                // Return b.amount to the gambler
-                (bool success, ) = b.player.call{value: b.amount}("");
-                // 2. Emit an event to signal mismatch/refund
-                emit BetCancelled("Refund",b.player, b.amount);
-                require(success, "Refund to gambler failed");
+            rejectedValidators.push(msg.sender);
+            emit ResultRejected(msg.sender, result, recomputedResult);
+            if (rejectedValidators.length >= validatorThreshold) {
+                refundAllTransactions(
+                    "Majority of validators rejected the result."
+                );
+                return;
             }
-            emit BetCancelled("Refund to host",host, address(this).balance);
-            payable(host).transfer(address(this).balance);
-            // 3. Mark the game invalid/canceled (optional)
-            status = STATUS_CANCELED; 
-
-            // 4. End the function without reverting
-            return;
-            }
-
-        }else{
-            require(
-             !matchSigners[msg.sender],
-            "Validator already signed matched"
-            );
-            require(
-            recomputedResult == result,
-            "Stored result != recomputed result"
-            );
-
-            // Record this validator's signature
-            matchedValidators.push(msg.sender);
-            matchSigners[msg.sender] = true;
-            
-            // If enough signatures, finalize
-            if (matchedValidators.length >= validate_threshold) {
+        } else {
+            approvedValidators.push(msg.sender);
+            emit ResultAccepted(msg.sender, result, recomputedResult);
+            // * if approved validators reach the threshold, auto settle the bet
+            if (approvedValidators.length >= validatorThreshold) {
                 emit ResultValidated(result);
                 status = STATUS_RESULT_VALIDATED;
-                settleBet();
+                return settleBet();
             }
         }
-        
-    }
-    
-    function settleBet() public {
-        require(status == STATUS_RESULT_VALIDATED, "Result not validated yet");
-
-        // Assume only one player versus the host, we can directly settle the bet, i.e. no need to wait for the host to call it
-        // require(msg.sender == host, "Only host can settle the bet");
-        for (uint256 i = 0; i < bets.length; i++) {
-            if (bets[i].option >= 0 && bets[i].option <= 37) {
-                // straight up
-                if (bets[i].option == result) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_STRAIGHT_UP) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_STRAIGHT_UP) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 38) {
-                // low
-                if (isInLowSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 39) {
-                if (isInHighSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_LOW_OR_HIGH) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 40) {
-                if (isInRedSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 41) {
-                if (isInBlackSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_RED_OR_BLACK) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 42) {
-                if (isInEvenSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 43) {
-                if (isInOddSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_EVEN_OR_ODD) /
-                            PAYOUT_SCALE_FACTOR
-                    );
-                }
-                break;
-            } else if (bets[i].option == 44) {
-                if (isInFirstColumnSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            } else if (bets[i].option == 45) {
-                if (isInSecondColumnSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            } else if (bets[i].option == 46) {
-                if (isInThirdColumnSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_COLUMNS) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            } else if (bets[i].option == 47) {
-                if (isInFirstDozenSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            } else if (bets[i].option == 48) {
-                if (isInSecondDozenSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            } else if (bets[i].option == 49) {
-                if (isInThirdDozenSet(result)) {
-                    // Player wins
-                    payable(bets[i].player).transfer(
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                    emit BetPayout(
-                        bets[i].player,
-                        bets[i].option,
-                        (bets[i].amount * PAYOUT_DOZEN) / PAYOUT_SCALE_FACTOR
-                    );
-                }
-            }
-        }
-        emit GameEnded(host, address(this).balance);
-        payable(host).transfer(address(this).balance);
+        return;
     }
 }
