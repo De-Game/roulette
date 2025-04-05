@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-input: #2d2d2d;
+            --border-color: #3d3d3d;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            color: var(--primary-light);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus {
+            background: var(--bg-input);
+            border-color: var(--primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .address-tag {
+            background: var(--bg-input);
+            color: var(--primary-light);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .bet-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .number-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .number-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .number-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .bet-type-btn {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .bet-type-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .bet-type-text {
+            font-weight: 600;
+        }
+
+        /* Color Bet Types */
+        .bet-type-btn[data-type="red"] {
+            background: rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+        }
+
+        .bet-type-btn[data-type="black"] {
+            background: rgba(0, 0, 0, 0.1);
+            border-color: #000000;
+        }
+
+        /* Column Bet Types */
+        .bet-type-btn[data-type="firstColumn"],
+        .bet-type-btn[data-type="secondColumn"],
+        .bet-type-btn[data-type="thirdColumn"] {
+            background: rgba(108, 92, 231, 0.1);
+            border-color: var(--primary);
+        }
+
+        /* Dozen Bet Types */
+        .bet-type-btn[data-type="firstDozen"],
+        .bet-type-btn[data-type="secondDozen"],
+        .bet-type-btn[data-type="thirdDozen"] {
+            background: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+        }
+
+        .bet-type-btn.selected {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .bet-type-btn.selected[data-type="red"] {
+            background: #ff0000;
+            color: white;
+        }
+
+        .bet-type-btn.selected[data-type="black"] {
+            background: #000000;
+            color: white;
+        }
+
+        .bet-type-btn.selected[data-type="firstColumn"],
+        .bet-type-btn.selected[data-type="secondColumn"],
+        .bet-type-btn.selected[data-type="thirdColumn"] {
+            background: var(--primary);
+            color: white;
+        }
+
+        .bet-type-btn.selected[data-type="firstDozen"],
+        .bet-type-btn.selected[data-type="secondDozen"],
+        .bet-type-btn.selected[data-type="thirdDozen"] {
+            background: #ffc107;
+            color: black;
+        }
+
+        .status-badge {
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .status-active {
+            background: rgba(25, 135, 84, 0.2);
+            color: #198754;
+            border: 1px solid #198754;
+        }
+
+        .status-finished {
+            background: rgba(13, 110, 253, 0.2);
+            color: #0d6efd;
+            border: 1px solid #0d6efd;
+        }
+
+        .status-canceled {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .status-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .bet-options {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .number-selection,
+        .bet-type-selection {
+            margin-bottom: 1rem;
+        }
+
+        .number-btn,
+        .bet-type-btn {
+            transition: all 0.2s ease;
+        }
+
+        .number-btn.selected,
+        .bet-type-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .number-btn:not(.selected):hover,
+        .bet-type-btn:not(.selected):hover {
+            background: var(--bg-card);
+            border-color: var(--primary);
+        }
+
+        /* Roulette Wheel Styling */
+        .roulette-wheel {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        .number-btn {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+
+        .number-btn[data-number="00"] {
+            font-size: 0.9rem;
+        }
+
+        .number-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .number-btn:hover::before {
+            opacity: 1;
+        }
+
+        .number-btn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* Bet Button */
+        .bet-button {
+            padding: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .bet-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
+        }
+
+        .bet-button:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .bet-button-amount {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        /* Input Group */
+        .input-group {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .input-group .form-control {
+            border-right: none;
+        }
+
+        .input-group .btn {
+            border-left: none;
+            padding: 0.75rem 1.5rem;
+        }
+
+        /* Bet Options Container */
+        .bet-options {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Number Colors */
+        .number-btn.red {
+            background: rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .number-btn.black {
+            background: rgba(0, 0, 0, 0.1);
+            border-color: #000000;
+            color: #000000;
+        }
+
+        .number-btn.green {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .number-btn.selected.red {
+            background: #ff0000;
+            color: white;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        .number-btn.selected.black {
+            background: #000000;
+            color: white;
+            box-shadow: 0 0 15px #000000;
+        }
+
+        .number-btn.selected.green {
+            background: #00ff00;
+            color: black;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .number-btn.selected,
+        .bet-type-btn.selected {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        /* Hover Effects */
+        .number-btn:hover,
+        .bet-type-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .number-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+
+            .number-btn {
+                font-size: 0.9rem;
+            }
+
+            .number-btn[data-number="00"] {
+                font-size: 0.8rem;
+            }
+
+            .bet-type-btn {
+                min-width: 100px;
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .bet-button {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .bet-type-icon {
+                font-size: 1rem;
+            }
+        }
+
+        /* Host Deposit Styling */
+        .deposit-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            margin-right: 1rem;
+        }
+
+        .deposit-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .deposit-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        #hostDepositStatus {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            min-width: 300px;
+        }
+
+        #hostDepositAmountInput {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        #makeDeposit {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            white-space: nowrap;
+        }
+
+        #depositValidationMessage {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            #hostDepositStatus {
+                min-width: auto;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .deposit-amount {
+                margin-right: 0;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #hostDepositAmountInput {
+                border-radius: 8px;
+                margin-bottom: 0.5rem;
+            }
+
+            #makeDeposit {
+                border-radius: 8px;
+                width: 100%;
+            }
+
+            .deposit-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.2.0/ethers.umd.min.js"
+        type="application/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="js/game.js"></script>
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card p-4 mb-4">
+                    <h1 class="text-center mb-4">Roulette Game</h1>
+
+                    <!-- Contract Info -->
+                    <div class="mb-4">
+                        <div class="subtitle">Contract Address</div>
+                        <div class="address-tag" id="contractAddress"></div>
+                    </div>
+
+                    <!-- Wallet Connection -->
+                    <div class="mb-4">
+                        <div class="subtitle">Your Wallet Address</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
+                            <span id="walletAddress" class="address-tag"></span>
+                        </div>
+                    </div>
+
+                    <!-- Game Status -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Game Status</h5>
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="status-badge" id="gameStatus"></div>
+                                        <div class="status-description" id="statusDescription"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="subtitle">Last Updated</div>
+                                    <div class="text-muted" id="lastUpdated"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Info -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Game Information</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="subtitle">Minimum Bet</div>
+                                    <div class="bet-amount" id="minBet"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="subtitle">Maximum Bet</div>
+                                    <div class="bet-amount" id="maxBet"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="subtitle">Your Balance</div>
+                                    <div class="bet-amount" id="playerBalance"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Host Deposit Card -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Host Deposit</h5>
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="status-badge" id="hostDepositStatus">
+                                            <span class="deposit-amount" id="hostDepositAmount">0 ETH</span>
+                                            <span class="deposit-status" id="hostDepositStatusText">Not Deposited</span>
+                                        </div>
+                                        <div class="deposit-info">
+                                            <span class="subtitle">Minimum Deposit Required:</span>
+                                            <span class="deposit-amount" id="minDepositAmount">0 ETH</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="hostDepositAmountInput" min="0"
+                                            step="0.01" placeholder="Amount in ETH">
+                                        <button class="btn btn-primary" id="makeDeposit" disabled>Make Deposit</button>
+                                    </div>
+                                    <div class="form-text text-muted mt-2" id="depositValidationMessage"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Betting Panel -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Place Your Bet</h5>
+
+                            <!-- Bet Amount -->
+                            <div class="mb-4">
+                                <label class="form-label">Bet Amount (ETH)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="betAmount" min="0" step="0.01"
+                                        required>
+                                    <button class="btn btn-outline-primary" type="button" id="maxBetBtn">Max</button>
+                                </div>
+                                <div class="form-text text-muted">Enter an amount between the minimum and maximum bet
+                                    limits</div>
+                            </div>
+
+                            <!-- Bet Selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Select Your Bet</label>
+                                <div class="bet-options">
+                                    <!-- Number Selection -->
+                                    <div class="number-selection mb-4">
+                                        <div class="subtitle mb-2">Numbers (00, 0-36)</div>
+                                        <div class="roulette-wheel">
+                                            <div class="number-grid" id="numberGrid">
+                                                <!-- Numbers will be added by JavaScript -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bet Type Selection -->
+                                    <div class="bet-type-selection">
+                                        <div class="subtitle mb-2">Special Bets</div>
+                                        <div class="d-flex gap-2 flex-wrap" id="betTypeButtons">
+                                            <!-- Color Bets -->
+                                            <button class="bet-type-btn" data-type="red">
+                                                <span class="bet-type-icon">🔴</span>
+                                                <span class="bet-type-text">Red</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="black">
+                                                <span class="bet-type-icon">⚫</span>
+                                                <span class="bet-type-text">Black</span>
+                                            </button>
+                                            <!-- Even/Odd Bets -->
+                                            <button class="bet-type-btn" data-type="even">
+
+                                                <span class="bet-type-text">Even</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="odd">
+
+                                                <span class="bet-type-text">Odd</span>
+                                            </button>
+                                            <!-- Half Bets -->
+                                            <button class="bet-type-btn" data-type="1to18">
+                                                <span class="bet-type-text">1-18</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="19to36">
+                                                <span class="bet-type-text">19-36</span>
+                                            </button>
+                                            <!-- Column Bets -->
+                                            <button class="bet-type-btn" data-type="firstColumn">
+                                                <span class="bet-type-text">1st Column</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="secondColumn">
+                                                <span class="bet-type-text">2nd Column</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="thirdColumn">
+                                                <span class="bet-type-text">3rd Column</span>
+                                            </button>
+                                            <!-- Dozen Bets -->
+                                            <button class="bet-type-btn" data-type="firstDozen">
+                                                <span class="bet-type-text">1-12</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="secondDozen">
+                                                <span class="bet-type-text">13-24</span>
+                                            </button>
+                                            <button class="bet-type-btn" data-type="thirdDozen">
+                                                <span class="bet-type-text">25-36</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Place Bet Button -->
+                            <button id="placeBet" class="btn btn-primary w-100 bet-button" disabled>
+                                <span class="bet-button-text">Place Bet</span>
+                                <span class="bet-button-amount" id="betAmountDisplay">0 ETH</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game History -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Game History</h5>
+                            <div class="list-group" id="gameHistory">
+                                <!-- Game history will be added by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

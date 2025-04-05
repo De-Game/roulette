@@ -7,7 +7,7 @@ let factoryContractAddress = null;
 let factoryContractAbi = null;
 
 function copyToClipboard(text) {
-    debugger
+  debugger;
   navigator.clipboard
     .writeText(text)
     .then(() => {
@@ -31,6 +31,47 @@ async function getContractInfo() {
   }
 }
 
+async function getAccount() {
+  const accounts = await provider.send("eth_requestAccounts", []);
+  if (accounts.length === 1) {
+    return accounts[0];
+  } else {
+    const dialog = document.createElement("div");
+    dialog.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        z-index: 1000;
+      `;
+
+    dialog.innerHTML = `
+        <h5 style="color: var(--text-primary); margin-bottom: 15px;">Select Account</h5>
+        <select class="form-control" style="margin-bottom: 15px;">
+          ${accounts
+            .map((acc, i) => `<option value="${acc}">${acc}</option>`)
+            .join("")}
+        </select>
+        <button class="btn btn-primary w-100">Confirm</button>
+      `;
+
+    document.body.appendChild(dialog);
+
+    // Handle selection
+    return new Promise((resolve) => {
+      dialog.querySelector("button").onclick = () => {
+        let selectedAccount = dialog.querySelector("select").value;
+        document.body.removeChild(dialog);
+        resolve(selectedAccount);
+      };
+    });
+  }
+}
+
 async function connectWallet() {
   try {
     if (!window.ethereum) {
@@ -39,8 +80,16 @@ async function connectWallet() {
     }
 
     provider = new ethers.providers.Web3Provider(window.ethereum);
-    const accounts = await provider.send("eth_requestAccounts", []);
-    currentWallet = accounts[0];
+    await window.ethereum.request({
+      method: "wallet_requestPermissions",
+      params: [
+        {
+          eth_accounts: {},
+        },
+      ],
+    });
+    const account = await getAccount();
+    currentWallet = account;
     document.getElementById("walletAddress").textContent = currentWallet;
 
     // Initialize contract instance
@@ -157,10 +206,22 @@ async function loadContracts() {
         contractItem.className = "list-group-item";
         contractItem.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="font-monospace">${contractAddress}</span>
-                        <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('${contractAddress}')">
-                            Copy Address
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="font-monospace">${contractAddress}</span>
+                            <span class="badge bg-primary">Contract Address</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.location.href='game.html?address=${contractAddress}'">
+                                Play
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="navigator.clipboard.writeText('${contractAddress}').then(() => this.textContent = 'Copied!').catch(err => console.error('Failed to copy:', err))">
+                                Copy
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.open('https://sepolia.etherscan.io/address/${contractAddress}', '_blank')">
+                                Etherscan
+                            </button>
+                            
+                        </div>
                     </div>
                 `;
         contractsList.appendChild(contractItem);
@@ -175,8 +236,6 @@ async function loadContracts() {
       '<div class="list-group-item text-danger">Error loading contracts</div>';
   }
 }
-
-
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", async () => {

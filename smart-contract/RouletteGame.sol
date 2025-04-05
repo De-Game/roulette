@@ -398,6 +398,7 @@ contract RouletteGame {
     uint256 public minDeposit;
     uint256 public minBet;
     uint256 public maxBet;
+    uint256 public hostDeposit;
     uint256 public cutOffBlockNumber;
     uint8 public result;
     uint8 public validatorThreshold;
@@ -429,6 +430,7 @@ contract RouletteGame {
         validators = _validators;
         validatorThreshold = _validatorThreshold;
         status = STATUS_PENDING_HOST_DEPOSIT;
+        hostDeposit = 0;
         owner = _owner;
         emit GameCreated(
             _host,
@@ -740,6 +742,7 @@ contract RouletteGame {
             msg.value >= minDeposit,
             "Deposit amount is below the minimum deposit."
         );
+        hostDeposit = msg.value;
         // * calculate the maximum accepted (commitable) bet amount based on the deposit amount
         maxBet =
             (msg.value - (msg.value % PAYOUT_RATIO_MAX)) /

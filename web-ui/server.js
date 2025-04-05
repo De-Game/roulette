@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { ethers } = require("ethers");
+const path = require("path");
 
 const app = express();
 const port = 3000;
@@ -10,96 +11,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-// Redirect root to factory.html
-app.get('/', (req, res) => {
-    res.redirect('/factory.html');
-});
-
 // Provider setup
 const provider = new ethers.providers.JsonRpcProvider(
   `https://eth-sepolia.g.alchemy.com/v2/KzMo6mqHA6-Re4Q0ayDrSW0XaR9bfymY`
 );
 
 const factoryContractAddress = "0x0d66f967a3f1EE4d4d5BF61d658d089dA10Dd7eB";
-const factoryContractABI = [
-  {
-    inputs: [],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "contractAddress",
-        type: "address",
-      },
-    ],
-    name: "GameCreated",
-    type: "event",
-  },
-  {
-    inputs: [],
-    name: "count",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_host",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_minBet",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_minDeposit",
-        type: "uint256",
-      },
-      {
-        internalType: "address[]",
-        name: "_validators",
-        type: "address[]",
-      },
-      {
-        internalType: "uint8",
-        name: "_validThreshold",
-        type: "uint8",
-      },
-    ],
-    name: "create",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getAllGames",
-    outputs: [
-      {
-        internalType: "address[]",
-        name: "",
-        type: "address[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+const factoryContractABI = require("../smart-contract/RouletteGameFactory_abi.json");
+
+const gameContractAbi = require("../smart-contract/RouletteGame_abi.json");
 
 // Read-only contract instance
 const contract = new ethers.Contract(
@@ -107,6 +27,36 @@ const contract = new ethers.Contract(
   factoryContractABI,
   provider
 );
+
+// Root route - redirect to factory
+app.get("/", (req, res) => {
+  res.redirect("/factory.html");
+});
+
+// Factory page route
+app.get("/factory.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "factory.html"));
+});
+
+// Game page route with validation
+app.get("/game.html", (req, res) => {
+  const address = req.query.address;
+
+  if (!address) {
+    // Redirect to factory if no address provided
+    res.redirect("/factory.html");
+    return;
+  }
+
+  // Validate Ethereum address
+  if (!ethers.utils.isAddress(address)) {
+    res.status(400).send("Invalid Ethereum address");
+    return;
+  }
+
+  // Send the game page
+  res.sendFile(path.join(__dirname, "public", "game.html"));
+});
 
 app.get("/api/games", async (req, res) => {
   try {
@@ -126,6 +76,15 @@ app.get("/api/contract-info", (req, res) => {
         {
           address: factoryContractAddress,
           abi: factoryContractABI,
+        },
+      ],
+    });
+  } else if (req.query.module === "game") {
+    res.json({
+      success: true,
+      records: [
+        {
+          abi: gameContractAbi,
         },
       ],
     });
