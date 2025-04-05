@@ -768,7 +768,7 @@ contract RouletteGame {
             "Bet amount cannot be less than the minimum bet amount."
         );
         require(
-            msg.value < maxBet,
+            msg.value <= maxBet,
             "Bet amount cannot exceed the maximum bet amount."
         );
         Bet memory playerBet = Bet({
