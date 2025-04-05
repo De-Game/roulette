@@ -3,7 +3,7 @@ pragma solidity >=0.8.2 <0.9.0;
 import "./RouletteGame.sol";
 
 contract RouletteGameFactory {
-    event GameCreated(address indexed gameAddress);
+    event GameCreated(address indexed contractAddress);
 
     mapping(uint256 => address) public gameAddresses;
     uint256 public count;
