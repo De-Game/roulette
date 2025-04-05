@@ -738,15 +738,21 @@ contract RouletteGame {
             "Deposit can not be placed in current status."
         );
         require(msg.sender == host, "Only host can deposit.");
+
+        require(msg.value > 0, "Deposit amount cannot be zero.");
         require(
             msg.value >= minDeposit,
             "Deposit amount is below the minimum deposit."
         );
-        hostDeposit = msg.value;
         // * calculate the maximum accepted (commitable) bet amount based on the deposit amount
-        maxBet =
-            (msg.value - (msg.value % PAYOUT_RATIO_MAX)) /
+        uint256 calMaxBet = (msg.value - (msg.value % PAYOUT_RATIO_MAX)) /
             PAYOUT_RATIO_MAX;
+        require(
+            calMaxBet >= minBet,
+            "Deposit amount can not cover the minimum bet."
+        );
+        hostDeposit = msg.value;
+        maxBet = calMaxBet;
         status = STATUS_PENDING_PLAYER_BET;
         emit DepositPlaced(msg.sender, msg.value, maxBet);
     }

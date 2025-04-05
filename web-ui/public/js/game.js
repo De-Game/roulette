@@ -506,7 +506,7 @@ async function makeDeposit() {
     const depositAmountWei = ethers.utils.parseEther(depositAmount);
 
     // Make deposit
-    const tx = await gameContract.makeDeposit({ value: depositAmountWei });
+    const tx = await gameContract.deposit({ value: depositAmountWei });
     await tx.wait();
 
     // Update UI
