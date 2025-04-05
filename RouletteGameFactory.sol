@@ -3,53 +3,48 @@ pragma solidity >=0.8.2 <0.9.0;
 import "./RouletteGame.sol";
 
 contract RouletteGameFactory {
-    event GameCreated(address indexed gameAddress, uint256 timestamp);
+    event GameCreated(address indexed gameAddress);
 
-    struct GameInfo {
-        address gameAddress;
-        uint256 creationTime;
+    mapping(uint256 => address) public gameAddresses;
+    uint256 public count;
+
+    constructor() {
+        count = 0;
     }
 
-    mapping(uint256 => GameInfo) public games; // Maps game index to GameInfo
-    uint256 public gameCount;
-
-    function createRouletteGame(
+    function create(
         address _host,
         uint256 _minBet,
+        uint256 _minDeposit,
         address[] memory _validators,
-        uint8 _valid_threshold
-    ) public payable returns (address) {
-        RouletteGame rouletteGame = new RouletteGame(
+        uint8 _validThreshold
+    ) public {
+        RouletteGame game = new RouletteGame(
             _host,
             _minBet,
+            _minDeposit,
             _validators,
-            _valid_threshold
+            _validThreshold
         );
 
-        games[gameCount] = GameInfo({
-            gameAddress: address(rouletteGame),
-            creationTime: block.timestamp
-        });
+        gameAddresses[count] = address(game);
+        count++;
 
-        emit GameCreated(address(rouletteGame), block.timestamp);
-        gameCount++;
-        return address(rouletteGame);
+        emit GameCreated(address(game));
+        return;
     }
 
     // Function to get all deployed games
     function getAllGames() external view returns (address[] memory) {
-        address[] memory result = new address[](gameCount);
-        for (uint256 i = 0; i < gameCount; i++) {
-            result[i] = games[i].gameAddress;
+        address[] memory allGames = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            allGames[i] = gameAddresses[i];
         }
-        return result;
+        return allGames;
     }
 
     // Function to get a specific game by index
-    function getGameByIndex(
-        uint256 _index
-    ) external view returns (address, uint256) {
-        GameInfo storage game = games[_index];
-        return (game.gameAddress, game.creationTime);
+    function getGameByIndex(uint256 _index) external view returns (address) {
+        return gameAddresses[_index];
     }
 }
