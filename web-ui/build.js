@@ -50,6 +50,15 @@ function copyDir(src, dest) {
 // Copy the public directory
 copyDir(publicDir, distPublicDir);
 
+// Copy config.json to dist directory
+console.log('Copying config.json to dist directory...');
+const configPath = path.join(__dirname, 'config.json');
+if (fs.existsSync(configPath)) {
+    fs.copyFileSync(configPath, path.join(distDir, 'config.json'));
+} else {
+    console.warn('Warning: config.json not found in source directory');
+}
+
 // Create a README file
 const readmeContent = `# Roulette Game Application
 
@@ -59,6 +68,10 @@ This is a standalone executable version of the Roulette Game application.
 
 1. Double-click on 'roulette-app.exe'
 2. The application will start and be available at http://localhost:3000/de-game
+
+## Configuration
+
+The application uses config.json for contract configuration. Make sure this file exists and contains the correct contract address.
 
 ## Requirements
 

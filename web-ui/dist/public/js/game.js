@@ -595,7 +595,9 @@ async function makeDeposit() {
 // Fetch and update game history
 async function updateGameHistory() {
   try {
-    const response = await fetch(`/de-game/api/events?address=${contractAddress}`);
+    const response = await fetch(
+      `/de-game/api/events?address=${contractAddress}`
+    );
     const result = await response.json();
 
     if (result.success) {
@@ -723,8 +725,10 @@ function createEventElement(event) {
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h6 class="mb-1">Deposit Payout</h6>
+            <small class="text-muted">Host: ${event.args[0] || "N/A"}</small>
+            <br>
             <small class="text-muted">Amount: ${formatEthAmount(
-              event.args[0]
+              event.args[1]
             )}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
@@ -775,7 +779,7 @@ function createEventElement(event) {
             <small class="text-muted">Option: ${event.args[1] || "N/A"}</small>
             <br>
             <small class="text-muted">Amount: ${formatEthAmount(
-              event.args.amount
+              event.args[2]
             )}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
@@ -856,7 +860,7 @@ function createEventElement(event) {
           <div>
             <h6 class="mb-1">Result Validated</h6>
             <small class="text-muted">Result: ${formatBigNumber(
-              event.args[2]
+              event.args[0]
             )}</small>
           </div>
           <small class="text-muted">${timestamp}</small>

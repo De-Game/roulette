@@ -7,6 +7,10 @@ This is a standalone executable version of the Roulette Game application.
 1. Double-click on 'roulette-app.exe'
 2. The application will start and be available at http://localhost:3000/de-game
 
+## Configuration
+
+The application uses config.json for contract configuration. Make sure this file exists and contains the correct contract address.
+
 ## Requirements
 
 - Windows 10 or later
