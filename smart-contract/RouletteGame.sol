@@ -850,6 +850,14 @@ contract RouletteGame {
         emit ResultGenerated(result);
     }
 
+    function getApprovedValidators() public view returns (address[] memory) {
+        return approvedValidators;
+    }
+
+    function getRejectedValidators() public view returns (address[] memory) {
+        return rejectedValidators;
+    }
+
     function validateResult() public {
         require(
             status == STATUS_RESULT_GENERATED,
