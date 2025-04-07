@@ -54,7 +54,9 @@ copyDir(publicDir, distPublicDir);
 console.log('Copying config.json to dist directory...');
 const configPath = path.join(__dirname, 'config.json');
 if (fs.existsSync(configPath)) {
+    // Copy config.json to both root and public directory
     fs.copyFileSync(configPath, path.join(distDir, 'config.json'));
+    fs.copyFileSync(configPath, path.join(distPublicDir, 'config.json'));
 } else {
     console.warn('Warning: config.json not found in source directory');
 }
@@ -71,7 +73,7 @@ This is a standalone executable version of the Roulette Game application.
 
 ## Configuration
 
-The application uses config.json for contract configuration. Make sure this file exists and contains the correct contract address.
+The application uses config.json for contract configuration. You can modify the config.json file in the same directory as the executable to change contract settings.
 
 ## Requirements
 

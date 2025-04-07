@@ -26,14 +26,34 @@ if (isPackaged && !fs.existsSync(publicPath)) {
 app.use(pathPrefix, express.static(publicPath));
 
 // Read contract address from config
-const config = require("./config.json");
+let config;
+try {
+  // Try to read config from the same directory as the executable first
+  const configPath = isPackaged 
+    ? path.join(process.execPath, "..", "config.json")
+    : path.join(__dirname, "config.json");
+  
+  if (fs.existsSync(configPath)) {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  } else {
+    // Fallback to public directory
+    const publicConfigPath = path.join(publicPath, "config.json");
+    if (fs.existsSync(publicConfigPath)) {
+      config = JSON.parse(fs.readFileSync(publicConfigPath, 'utf8'));
+    } else {
+      throw new Error("config.json not found");
+    }
+  }
+} catch (error) {
+  console.error("Error loading config:", error);
+  process.exit(1);
+}
 
 // Provider setup
 const provider = new ethers.providers.JsonRpcProvider(config.providerUrl);
 const factoryContractAddress = config.factoryContractAddress;
 
 const factoryContractAbi = require("../smart-contract/RouletteGameFactory_abi.json");
-
 const gameContractAbi = require("../smart-contract/RouletteGame_abi.json");
 
 // Read-only contract instance
@@ -159,4 +179,5 @@ app.get(`${pathPrefix}/api/events`, async (req, res) => {
 // Start server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}${pathPrefix}`);
+  console.log(`Using config from: ${isPackaged ? 'packaged executable directory' : 'development directory'}`);
 });

@@ -9,7 +9,7 @@ This is a standalone executable version of the Roulette Game application.
 
 ## Configuration
 
-The application uses config.json for contract configuration. Make sure this file exists and contains the correct contract address.
+The application uses config.json for contract configuration. You can modify the config.json file in the same directory as the executable to change contract settings.
 
 ## Requirements
 
