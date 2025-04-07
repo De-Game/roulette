@@ -17,37 +17,37 @@ if (!contractAddress) {
 const GAME_STATUS = {
   0: {
     text: "Pending Host Deposit",
-    class: "status-pending",
+    class: "waiting",
     description: "Waiting for the host to deposit funds to start the game.",
   },
   1: {
     text: "Accepting Bets",
-    class: "status-active",
+    class: "betting",
     description: "Game is active and accepting bets from players.",
   },
   2: {
     text: "No More Bets",
-    class: "status-pending",
+    class: "waiting",
     description: "Betting period has ended. Waiting for result generation.",
   },
   3: {
     text: "Result Generated",
-    class: "status-pending",
+    class: "result",
     description: "Result has been generated. Waiting for validation.",
   },
   4: {
     text: "Result Validated",
-    class: "status-finished",
+    class: "validation",
     description: "Result has been validated. Winnings can be claimed.",
   },
   5: {
     text: "Game Canceled",
-    class: "status-canceled",
+    class: "completed",
     description: "Game has been canceled. Refunds can be claimed.",
   },
   6: {
     text: "Game Finished",
-    class: "status-finished",
+    class: "completed",
     description: "Game has been completed successfully.",
   },
 };
@@ -162,8 +162,8 @@ async function loadGameInfo() {
     updateGameStatus(status);
 
     // Get host deposit
-    document.getElementById("hostDepositStatusText").textContent =
-      status < 1 ? "Not Deposited" : "Deposited";
+    const hostDeposit = await gameContract.hostDeposit();
+    document.getElementById("playerBalance").textContent = ethers.utils.formatEther(hostDeposit) + " ETH";
 
     // Get and display result if available
     const result = await gameContract.result();
@@ -192,21 +192,18 @@ async function loadGameInfo() {
       lastResultElement.className = "deposit-amount";
     }
 
-    // Update player balance if wallet is connected
-    if (currentWallet) {
-      const balance = await provider.getBalance(currentWallet);
-      document.getElementById("playerBalance").textContent =
-        ethers.utils.formatEther(balance) + " ETH";
-    }
-
     // Get validation info
     const validatorThreshold = await gameContract.validatorThreshold();
-    const approvedValidatorsCount = "TBC";
+    const approvedValidators = await gameContract.getApprovedValidators();
+    const rejectedValidators = await gameContract.getRejectedValidators();
 
-    const validatorCountElement = document.getElementById("validatorCount");
+    // Update validator counts with thresholds
+    document.getElementById("approvedValidatorsCount").textContent = `${approvedValidators.length}/${validatorThreshold}`;
+    document.getElementById("rejectedValidatorsCount").textContent = `${rejectedValidators.length}/${validatorThreshold}`;
 
-    // Update validator count
-    validatorCountElement.textContent = `${approvedValidatorsCount}/${validatorThreshold}`;
+    // Update validation button state
+    const validateResultButton = document.getElementById("validateResult");
+    validateResultButton.disabled = status !== 3 || !currentWallet;
   } catch (error) {
     console.error("Error loading game info:", error);
   }
@@ -467,76 +464,39 @@ function handleChainChanged() {
   window.location.reload();
 }
 
-// Update game status display
+// Update game status
 function updateGameStatus(status) {
+  const statusInfo = GAME_STATUS[status];
+  if (!statusInfo) return;
+
   const statusElement = document.getElementById("gameStatus");
   const descriptionElement = document.getElementById("statusDescription");
   const lastUpdatedElement = document.getElementById("lastUpdated");
-  const resultStatusElement = document.getElementById("resultStatusText");
+
+  // Update status text and class
+  statusElement.textContent = statusInfo.text;
+  statusElement.className = "status-badge " + statusInfo.class;
+  
+  // Update description
+  descriptionElement.textContent = statusInfo.description;
+  
+  // Update last updated timestamp
+  const now = new Date();
+  lastUpdatedElement.textContent = now.toLocaleTimeString();
+
+  // Update button states based on status
+  const placeBetButton = document.getElementById("placeBet");
   const generateResultButton = document.getElementById("generateResult");
   const validateResultButton = document.getElementById("validateResult");
-  const statusInfo = GAME_STATUS[status];
 
-  if (statusInfo) {
-    statusElement.textContent = statusInfo.text;
-    statusElement.className = `status-badge ${statusInfo.class}`;
-    descriptionElement.textContent = statusInfo.description;
-    lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+  // Enable/disable place bet button
+  placeBetButton.disabled = status !== 1 || !currentWallet;
 
-    // Update button states based on status
-    switch (status) {
-      case 0: // Pending Host Deposit
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = true;
-        break;
-      case 1: // Accepting Bets
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = true;
-        break;
-      case 2: // No More Bets
-        generateResultButton.disabled = false;
-        validateResultButton.disabled = true;
-        break;
-      case 3: // Result Generated
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = false;
-        break;
-      case 4: // Result Validated
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = true;
-        break;
-      case 5: // Game Canceled
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = true;
-        break;
-      case 6: // Game Finished
-        generateResultButton.disabled = true;
-        validateResultButton.disabled = true;
-        break;
-    }
-  } else {
-    statusElement.textContent = "Unknown Status";
-    statusElement.className = "status-badge status-pending";
-    descriptionElement.textContent = "Unable to determine game status";
-    lastUpdatedElement.textContent = new Date().toLocaleTimeString();
-    generateResultButton.disabled = true;
-    validateResultButton.disabled = true;
-  }
+  // Enable/disable generate result button
+  generateResultButton.disabled = status !== 2 || !currentWallet;
 
-  // Update betting panel based on status
-  const bettingPanel = document
-    .querySelector("#placeBet")
-    .closest(".card-body");
-  const placeBetButton = document.getElementById("placeBet");
-
-  if (status === 1) {
-    // STATUS_PENDING_PLAYER_BET
-    bettingPanel.style.opacity = "1";
-    placeBetButton.disabled = false;
-  } else {
-    bettingPanel.style.opacity = "0.5";
-    placeBetButton.disabled = true;
-  }
+  // Enable/disable validate result button
+  validateResultButton.disabled = status !== 3 || !currentWallet;
 }
 
 // Validate deposit amount
@@ -661,7 +621,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Game Created</h6>
+            <small class="text-muted">Game Created</small>
+            <br>
             <small class="text-muted">Host: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Min Bet: ${formatEthAmount(
@@ -688,7 +649,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Host Deposit Placed</h6>
+            <small class="text-muted">Host Deposit Placed</small>
+            <br>
             <small class="text-muted">Host: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Amount: ${formatEthAmount(
@@ -707,7 +669,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Deposit Refunded</h6>
+            <small class="text-muted">Deposit Refunded</small>
+            <br>
             <small class="text-muted">Host: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Amount: ${formatEthAmount(
@@ -724,7 +687,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Deposit Payout</h6>
+            <small class="text-muted">Deposit Payout</small>
+            <br>
             <small class="text-muted">Host: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Amount: ${formatEthAmount(
@@ -739,7 +703,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Bet Placed</h6>
+            <small class="text-muted">Bet Placed</small>
+            <br>
             <small class="text-muted">Player: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Option: ${event.args[1] || "N/A"}</small>
@@ -756,7 +721,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Bet Refunded</h6>
+            <small class="text-muted">Bet Refunded</small>
+            <br>
             <small class="text-muted">Player: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Amount: ${formatEthAmount(
@@ -773,7 +739,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Bet Payout</h6>
+            <small class="text-muted">Bet Payout</small>
+            <br>
             <small class="text-muted">Player: ${event.args[0] || "N/A"}</small>
             <br>
             <small class="text-muted">Option: ${event.args[1] || "N/A"}</small>
@@ -790,7 +757,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">No More Bets</h6>
+            <small class="text-muted">No More Bets</small>
+            <br>
             <small class="text-muted">Cut-off Block: ${formatBigNumber(
               event.args[0]
             )}</small>
@@ -803,7 +771,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Result Generated</h6>
+            <small class="text-muted">Result Generated</small>
+            <br>
             <small class="text-muted">Result: ${formatBigNumber(
               event.args[0]
             )}</small>
@@ -816,7 +785,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Result Accepted</h6>
+            <small class="text-muted">Result Accepted</small>
+            <br>
             <small class="text-muted">Validator: ${
               event.args[0] || "N/A"
             }</small>
@@ -837,7 +807,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Result Rejected</h6>
+            <small class="text-muted">Result Rejected</small>
+            <br>
             <small class="text-muted">Validator: ${
               event.args[0] || "N/A"
             }</small>
@@ -858,7 +829,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Result Validated</h6>
+            <small class="text-muted">Result Validated</small>
+            <br>
             <small class="text-muted">Result: ${formatBigNumber(
               event.args[0]
             )}</small>
@@ -871,7 +843,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Game Canceled</h6>
+            <small class="text-muted">Game Canceled</small>
+            <br>
             <small class="text-muted">Reason: ${event.args[0]}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
@@ -882,7 +855,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Validation Log</h6>
+            <small class="text-muted">Validation Log</small>
+            <br>
             <small class="text-muted">Validator: ${event.args[0]}</small>
             <br>
             <small class="text-muted">Step: ${event.args[1]}</small>
@@ -901,7 +875,7 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">Game Finished</h6>
+            <small class="text-muted">Game Finished</small>
           </div>
           <small class="text-muted">${timestamp}</small>
         </div>
@@ -911,7 +885,8 @@ function createEventElement(event) {
       eventContent = `
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="mb-1">${event.event}</h6>
+            <small class="text-muted">${event.event}</small>
+            <br>
             <small class="text-muted">Block: ${event.blockNumber}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
