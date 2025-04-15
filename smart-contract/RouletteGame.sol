@@ -379,6 +379,20 @@ contract RouletteGame {
 
     event GameCanceled(string reason);
 
+
+    /// @notice Full trace of the RNG computation, emitted once per validator call.
+    event ValidationTrace(
+        address indexed validator,   // who ran the validation
+        uint256 indexed usedBlock,   // cutOffBlockNumber + 1
+        bytes32 blockHash,           // step ①
+        bytes   packedData,          // step ②
+        bytes32 randomHash,          // step ③
+        uint256 randomNumber,        // step ④
+        uint8   recomputedResult,    // step ⑤
+        uint8   originalResult,      // value stored in the contract
+        bool    matches              // recomputedResult == originalResult ?
+    );
+
     // New event to prove step-by-step hashing
     event ValidationLog(
         address indexed validator,
@@ -661,8 +675,12 @@ function verifyPayoutCoverage(uint256 totalPayout, uint256 hostReturn) public vi
         bytes32 randomBlockHash = blockhash(usedBlockNumber);
 
         if (randomBlockHash == bytes32(0)) {
+            rejectedValidators.push(msg.sender);
             emit ValidationLog(msg.sender, 1, false, "Block hash is not available.");
-            refundAllTransactions("Block hash is not available.");
+            if (rejectedValidators.length >= validatorThreshold) {
+                refundAllTransactions("Block hash is not available.");
+            }
+            
             return;
         }
 
@@ -713,13 +731,15 @@ function verifyPayoutCoverage(uint256 totalPayout, uint256 hostReturn) public vi
             uint256 contractBalance = address(this).balance;
 
             if(verifyPayoutCoverage(totalPayout, contractBalance - totalPayout)){
+
+
                 approvedValidators.push(msg.sender);
                 emit ResultAccepted(msg.sender, result, recomputedResult);
             }else{
                 rejectedValidators.push(msg.sender);
                 emit ResultRejected_MismatchPayout(msg.sender, "Payout + host return must exactly match deposited & bet fail", totalPayout);
                 if (rejectedValidators.length >= validatorThreshold) {
-                    refundAllTransactions("Majority of validators rejected the result.");
+                    refundAllTransactions("Fail: Payout + host return not equal deposited + bet");
                 }
             }
 
