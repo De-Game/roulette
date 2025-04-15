@@ -593,7 +593,8 @@ contract RouletteGame {
     function getHostCommitableAmount() private view returns (uint256) {
         uint256 hostCommitableAmount = hostDeposit;
         for (uint256 i = 0; i < bets.length; i++) {
-            hostCommitableAmount -= bets[i].amount;
+            // * assume every bet is a winning bet
+            hostCommitableAmount -= bets[i].amount * getPayoutMultiplier(bets[i].option);
         }
         return hostCommitableAmount;
     }
