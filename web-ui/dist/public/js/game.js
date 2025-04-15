@@ -101,14 +101,6 @@ async function initGame() {
       validateBet();
     });
 
-    // Add max bet button listener
-    document.getElementById("maxBetBtn").addEventListener("click", () => {
-      const maxBet = parseFloat(document.getElementById("maxBet").textContent);
-      document.getElementById("betAmount").value = maxBet;
-      updateBetAmountDisplay();
-      validateBet();
-    });
-
     // Add host deposit input listener
     document
       .getElementById("hostDepositAmountInput")
@@ -147,11 +139,6 @@ async function loadGameInfo() {
     document.getElementById("minBet").textContent =
       ethers.utils.formatEther(minBet) + " ETH";
 
-    // Get maximum bet
-    const maxBet = await gameContract.maxBet();
-    document.getElementById("maxBet").textContent =
-      ethers.utils.formatEther(maxBet) + " ETH";
-
     // Get minimum deposit
     const minDeposit = await gameContract.minDeposit();
     document.getElementById("minDepositAmount").textContent =
@@ -163,7 +150,8 @@ async function loadGameInfo() {
 
     // Get host deposit
     const hostDeposit = await gameContract.hostDeposit();
-    document.getElementById("playerBalance").textContent = ethers.utils.formatEther(hostDeposit) + " ETH";
+    document.getElementById("playerBalance").textContent =
+      ethers.utils.formatEther(hostDeposit) + " ETH";
 
     // Get and display result if available
     const result = await gameContract.result();
@@ -198,8 +186,12 @@ async function loadGameInfo() {
     const rejectedValidators = await gameContract.getRejectedValidators();
 
     // Update validator counts with thresholds
-    document.getElementById("approvedValidatorsCount").textContent = `${approvedValidators.length}/${validatorThreshold}`;
-    document.getElementById("rejectedValidatorsCount").textContent = `${rejectedValidators.length}/${validatorThreshold}`;
+    document.getElementById(
+      "approvedValidatorsCount"
+    ).textContent = `${approvedValidators.length}/${validatorThreshold}`;
+    document.getElementById(
+      "rejectedValidatorsCount"
+    ).textContent = `${rejectedValidators.length}/${validatorThreshold}`;
 
     // Update validation button state
     const validateResultButton = document.getElementById("validateResult");
@@ -293,13 +285,11 @@ function validateBet() {
   const betAmount = document.getElementById("betAmount").value;
   const placeBetButton = document.getElementById("placeBet");
   const minBet = parseFloat(document.getElementById("minBet").textContent);
-  const maxBet = parseFloat(document.getElementById("maxBet").textContent);
   const betAmountFloat = parseFloat(betAmount);
 
   // Enable button if bet amount is valid and either a number or bet type is selected
   placeBetButton.disabled = !(
     betAmountFloat >= minBet &&
-    betAmountFloat <= maxBet &&
     (selectedNumber !== null || selectedBetType !== null)
   );
 
@@ -309,8 +299,6 @@ function validateBet() {
     betAmountInput.setCustomValidity(
       `Bet amount must be at least ${minBet} ETH`
     );
-  } else if (betAmountFloat > maxBet) {
-    betAmountInput.setCustomValidity(`Bet amount cannot exceed ${maxBet} ETH`);
   } else {
     betAmountInput.setCustomValidity("");
   }
@@ -476,10 +464,10 @@ function updateGameStatus(status) {
   // Update status text and class
   statusElement.textContent = statusInfo.text;
   statusElement.className = "status-badge " + statusInfo.class;
-  
+
   // Update description
   descriptionElement.textContent = statusInfo.description;
-  
+
   // Update last updated timestamp
   const now = new Date();
   lastUpdatedElement.textContent = now.toLocaleTimeString();
@@ -656,10 +644,6 @@ function createEventElement(event) {
             <small class="text-muted">Amount: ${formatEthAmount(
               event.args[1]
             )}</small>
-            <br>
-            <small class="text-muted">Max Bet: ${formatEthAmount(
-              event.args[2]
-            )}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
         </div>
@@ -790,14 +774,6 @@ function createEventElement(event) {
             <small class="text-muted">Validator: ${
               event.args[0] || "N/A"
             }</small>
-            <br>
-            <small class="text-muted">Generated: ${formatBigNumber(
-              event.args[1]
-            )}</small>
-            <br>
-            <small class="text-muted">Validated: ${formatBigNumber(
-              event.args[2]
-            )}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
         </div>
@@ -813,13 +789,7 @@ function createEventElement(event) {
               event.args[0] || "N/A"
             }</small>
             <br>
-            <small class="text-muted">Generated: ${formatBigNumber(
-              event.args[1]
-            )}</small>
-            <br>
-            <small class="text-muted">Validated: ${formatBigNumber(
-              event.args[2]
-            )}</small>
+            <small class="text-muted">Message: ${event.args[1]}</small>
           </div>
           <small class="text-muted">${timestamp}</small>
         </div>
@@ -830,10 +800,7 @@ function createEventElement(event) {
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <small class="text-muted">Result Validated</small>
-            <br>
-            <small class="text-muted">Result: ${formatBigNumber(
-              event.args[0]
-            )}</small>
+        
           </div>
           <small class="text-muted">${timestamp}</small>
         </div>

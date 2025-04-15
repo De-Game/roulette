@@ -101,14 +101,6 @@ async function initGame() {
       validateBet();
     });
 
-    // Add max bet button listener
-    document.getElementById("maxBetBtn").addEventListener("click", () => {
-      const maxBet = parseFloat(document.getElementById("maxBet").textContent);
-      document.getElementById("betAmount").value = maxBet;
-      updateBetAmountDisplay();
-      validateBet();
-    });
-
     // Add host deposit input listener
     document
       .getElementById("hostDepositAmountInput")
@@ -146,11 +138,6 @@ async function loadGameInfo() {
     const minBet = await gameContract.minBet();
     document.getElementById("minBet").textContent =
       ethers.utils.formatEther(minBet) + " ETH";
-
-    // Get maximum bet
-    const maxBet = await gameContract.maxBet();
-    document.getElementById("maxBet").textContent =
-      ethers.utils.formatEther(maxBet) + " ETH";
 
     // Get minimum deposit
     const minDeposit = await gameContract.minDeposit();
@@ -298,13 +285,11 @@ function validateBet() {
   const betAmount = document.getElementById("betAmount").value;
   const placeBetButton = document.getElementById("placeBet");
   const minBet = parseFloat(document.getElementById("minBet").textContent);
-  const maxBet = parseFloat(document.getElementById("maxBet").textContent);
   const betAmountFloat = parseFloat(betAmount);
 
   // Enable button if bet amount is valid and either a number or bet type is selected
   placeBetButton.disabled = !(
     betAmountFloat >= minBet &&
-    betAmountFloat <= maxBet &&
     (selectedNumber !== null || selectedBetType !== null)
   );
 
@@ -314,8 +299,6 @@ function validateBet() {
     betAmountInput.setCustomValidity(
       `Bet amount must be at least ${minBet} ETH`
     );
-  } else if (betAmountFloat > maxBet) {
-    betAmountInput.setCustomValidity(`Bet amount cannot exceed ${maxBet} ETH`);
   } else {
     betAmountInput.setCustomValidity("");
   }
