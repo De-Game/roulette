@@ -143,12 +143,6 @@
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "maxBet",
-				"type": "uint256"
 			}
 		],
 		"name": "DepositPlaced",
@@ -256,18 +250,6 @@
 				"internalType": "address",
 				"name": "validator",
 				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "generatedResult",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "validatedResult",
-				"type": "uint8"
 			}
 		],
 		"name": "ResultAccepted",
@@ -297,15 +279,9 @@
 			},
 			{
 				"indexed": false,
-				"internalType": "uint8",
-				"name": "generatedResult",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "validatedResult",
-				"type": "uint8"
+				"internalType": "string",
+				"name": "message",
+				"type": "string"
 			}
 		],
 		"name": "ResultRejected",
@@ -313,14 +289,7 @@
 	},
 	{
 		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "validatedResult",
-				"type": "uint8"
-			}
-		],
+		"inputs": [],
 		"name": "ResultValidated",
 		"type": "event"
 	},
@@ -484,7 +453,7 @@
 	},
 	{
 		"inputs": [],
-		"name": "getTotalBetsAmount",
+		"name": "getTotalBetAmount",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -744,19 +713,6 @@
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "maxBet",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
