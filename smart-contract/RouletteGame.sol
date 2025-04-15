@@ -828,6 +828,26 @@ contract RouletteGame {
         emit GameFinished();
     }
 
+    // * function to handle the after validation process
+    // * either refund all transactions or settle the bet, depending on the which validator threshold is reached first
+    function postValidateResult() private {
+        // * check if the validator threshold is reached
+        if (rejectedValidators.length >= validatorThreshold) {
+            refundAllTransactions(
+                "Majority of validators rejected the result."
+            );
+            return;
+        }
+        // * check if the validator threshold is reached
+        if (approvedValidators.length >= validatorThreshold) {
+            emit ResultValidated();
+            status = STATUS_RESULT_VALIDATED;
+            settleBet();
+            return;
+        }
+        return;
+    }
+
     // * ----------------------------------
     // * Public Functions
     // *----------------------------------
@@ -985,26 +1005,6 @@ contract RouletteGame {
 
     function getRejectedValidators() public view returns (address[] memory) {
         return rejectedValidators;
-    }
-
-    // * function to handle the after validation process
-    // * either refund all transactions or settle the bet, depending on the which validator threshold is reached first
-    function postValidateResult() private {
-        // * check if the validator threshold is reached
-        if (rejectedValidators.length >= validatorThreshold) {
-            refundAllTransactions(
-                "Majority of validators rejected the result."
-            );
-            return;
-        }
-        // * check if the validator threshold is reached
-        if (approvedValidators.length >= validatorThreshold) {
-            emit ResultValidated();
-            status = STATUS_RESULT_VALIDATED;
-            settleBet();
-            return;
-        }
-        return;
     }
 
     // Integrated validation and payout calculation in validateResult
