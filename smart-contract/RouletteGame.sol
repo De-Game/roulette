@@ -343,7 +343,7 @@ contract RouletteGame {
         address[] validators,
         uint8 validatorThreshold
     );
-    event DepositPlaced(address indexed host, uint256 amount, uint256 maxBet);
+    event DepositPlaced(address indexed host, uint256 amount);
     event DepositRefund(address indexed host, uint256 amount, string reason);
     event DepositPayout(address indexed host, uint256 amount);
 
@@ -354,46 +354,13 @@ contract RouletteGame {
     event NoMoreBets(uint256 cutOffBlockNumber);
     event ResultGenerated(uint8 generatedResult);
 
-    event ResultAccepted(
-        address indexed validator,
-        uint8 generatedResult,
-        uint8 validatedResult
-    );
-    event ResultRejected(
-        address indexed validator,
-        uint8 generatedResult,
-        uint8 validatedResult
-    );
-    event ResultRejected_MismatchPayout(
-        address indexed validator,
-        string message,
-        uint256 validatedResult
-    );
-    event EmptyResultRejected(
-        address indexed validator,
-        string message,
-        uint256 validatedResult
-    );
+    event ResultAccepted(address indexed validator);
+    event ResultRejected(address indexed validator, string message);
 
-    event ResultValidated(uint8 validatedResult);
+    event ResultValidated();
 
     event GameCanceled(string reason);
 
-
-    /// @notice Full trace of the RNG computation, emitted once per validator call.
-    event ValidationTrace(
-        address indexed validator,   // who ran the validation
-        uint256 indexed usedBlock,   // cutOffBlockNumber + 1
-        bytes32 blockHash,           // step ①
-        bytes   packedData,          // step ②
-        bytes32 randomHash,          // step ③
-        uint256 randomNumber,        // step ④
-        uint8   recomputedResult,    // step ⑤
-        uint8   originalResult,      // value stored in the contract
-        bool    matches              // recomputedResult == originalResult ?
-    );
-
-    // New event to prove step-by-step hashing
     event ValidationLog(
         address indexed validator,
         uint8 stepIndex,
@@ -421,7 +388,6 @@ contract RouletteGame {
     uint8 public status;
     uint256 public minDeposit;
     uint256 public minBet;
-    uint256 public maxBet;
     uint256 public hostDeposit;
     uint256 public cutOffBlockNumber;
     uint8 public result;
@@ -623,167 +589,261 @@ contract RouletteGame {
         return true;
     }
 
-// Function to verify payout to players plus host return exactly equals all input funds
-function verifyPayoutCoverage(uint256 totalPayout, uint256 hostReturn) public view returns (bool) {
-    uint256 totalInput = hostDeposit + getTotalBetsAmount();
-    return (totalPayout + hostReturn == totalInput);
-}
+    // * function to get the host commitable amount
+    function getHostCommitableAmount() private view returns (uint256) {
+        uint256 hostCommitableAmount = hostDeposit;
+        for (uint256 i = 0; i < bets.length; i++) {
+            hostCommitableAmount -= bets[i].amount;
+        }
+        return hostCommitableAmount;
+    }
 
-    // Helper function to get payout multiplier based on bet option (need high ratio on top)
+    // * function to get payout multiplier based on bet option (need high ratio on top)
     function getPayoutMultiplier(uint8 option) private pure returns (uint256) {
-        if (option <= OPTION_STRAIGHT_UP_ZERO_ZERO) return PAYOUT_RATIO_STRAIGHT_UP;
+        if (option <= OPTION_STRAIGHT_UP_ZERO_ZERO) {
+            return PAYOUT_RATIO_STRAIGHT_UP;
+        }
         if (
             option == OPTION_FIRST_COLUMN ||
             option == OPTION_SECOND_COLUMN ||
-            option == OPTION_THIRD_COLUMN 
-        ) return PAYOUT_RATIO_COLUMNS;
+            option == OPTION_THIRD_COLUMN
+        ) {
+            return PAYOUT_RATIO_COLUMNS;
+        }
         if (
             option == OPTION_FIRST_DOZEN ||
             option == OPTION_SECOND_DOZEN ||
             option == OPTION_THIRD_DOZEN
-        ) return PAYOUT_RATIO_DOZEN;
-        if (
-            option == OPTION_LOW ||
-            option == OPTION_HIGH 
-        ) return PAYOUT_RATIO_LOW_OR_HIGH;
-        if (
-            option == OPTION_RED ||
-            option == OPTION_BLACK 
-        ) return PAYOUT_RATIO_RED_OR_BLACK;
-        if (
-            option == OPTION_EVEN ||
-            option == OPTION_ODD
-        ) return PAYOUT_RATIO_EVEN_OR_ODD;
-        
-
-        revert("Invalid betting option.");
+        ) {
+            return PAYOUT_RATIO_DOZEN;
+        }
+        if (option == OPTION_LOW || option == OPTION_HIGH) {
+            return PAYOUT_RATIO_LOW_OR_HIGH;
+        }
+        if (option == OPTION_RED || option == OPTION_BLACK) {
+            return PAYOUT_RATIO_RED_OR_BLACK;
+        }
+        if (option == OPTION_EVEN || option == OPTION_ODD) {
+            return PAYOUT_RATIO_EVEN_OR_ODD;
+        }
+        // * should not happen, just in case
+        return 0;
     }
 
-    // Integrated validation and payout calculation in validateResult
-    function validateResult() public {
-        require(
-            status == STATUS_RESULT_GENERATED,
-            "Result can not be validated in current status."
-        );
+    // * function to get the payout amount for a bet
+    function getBetPayoutAmount(Bet memory bet) private view returns (uint256) {
+        uint8 option = bet.option;
+        uint256 amount = bet.amount;
+        // * check if the bet is a winning bet
+        if (
+            (option <= OPTION_STRAIGHT_UP_ZERO_ZERO && option == result) ||
+            (option == OPTION_LOW && isInLowSet(result)) ||
+            (option == OPTION_HIGH && isInHighSet(result)) ||
+            (option == OPTION_RED && isInRedSet(result)) ||
+            (option == OPTION_BLACK && isInBlackSet(result)) ||
+            (option == OPTION_EVEN && isInEvenSet(result)) ||
+            (option == OPTION_ODD && isInOddSet(result)) ||
+            (option == OPTION_FIRST_COLUMN && isInFirstColumnSet(result)) ||
+            (option == OPTION_SECOND_COLUMN && isInSecondColumnSet(result)) ||
+            (option == OPTION_THIRD_COLUMN && isInThirdColumnSet(result)) ||
+            (option == OPTION_FIRST_DOZEN && isInFirstDozenSet(result)) ||
+            (option == OPTION_SECOND_DOZEN && isInSecondDozenSet(result)) ||
+            (option == OPTION_THIRD_DOZEN && isInThirdDozenSet(result))
+        ) {
+            return amount * getPayoutMultiplier(option);
+        }
+        // * if the bet is not a winning bet, return 0
+        return 0;
+    }
 
-        require(
-            isAssignableValidator(msg.sender),
-            "Only validators can validate the result."
-        );
-
+    // * function to check if the random number is valid
+    function isResultGenerationValid() private returns (bool) {
         uint256 usedBlockNumber = cutOffBlockNumber + 1;
         bytes32 randomBlockHash = blockhash(usedBlockNumber);
-
+        // * before validating the result, check if the block hash is available
+        // * if the block hash is not available, reject the result, i.e. any further actions are meaningless
         if (randomBlockHash == bytes32(0)) {
             rejectedValidators.push(msg.sender);
-            emit ValidationLog(msg.sender, 1, false, "Block hash is not available.");
+            emit ValidationLog(
+                msg.sender,
+                1,
+                false,
+                "Block hash is not available."
+            );
             if (rejectedValidators.length >= validatorThreshold) {
                 refundAllTransactions("Block hash is not available.");
             }
-            
-            return;
+            return false;
+        }
+        // * add the validation log for step 1
+        emit ValidationLog(
+            msg.sender,
+            1,
+            true,
+            string(
+                abi.encodePacked(
+                    "Blockhash of cut-off block #",
+                    _uint256ToString(usedBlockNumber),
+                    " is ",
+                    _bytes32ToHexString(randomBlockHash)
+                )
+            )
+        );
+        // * add the validation log for step 2
+        address[] memory addrList = new address[](bets.length + 1);
+        addrList[0] = host;
+        for (uint256 i = 0; i < bets.length; i++) {
+            addrList[i + 1] = bets[i].player;
         }
 
+        // * convert the address array to a bracketed list for readability
+        string memory addrListString = _addressesToString(addrList);
+
+        emit ValidationLog(
+            msg.sender,
+            2,
+            true,
+            string(
+                abi.encodePacked(
+                    "Addresses included in the packed data: ",
+                    addrListString
+                )
+            )
+        );
+
+        // * add the validation log for step 3
         bytes memory packedData = abi.encodePacked(host);
         for (uint256 j = 0; j < bets.length; j++) {
             packedData = abi.encodePacked(packedData, bets[j].player);
         }
 
-        bytes32 randomHash = keccak256(abi.encodePacked(randomBlockHash, packedData));
+        emit ValidationLog(
+            msg.sender,
+            3,
+            true,
+            string(
+                abi.encodePacked(
+                    "Packed data of addresses in hex: ",
+                    _bytesToHexString(packedData)
+                )
+            )
+        );
+
+        // * add the validation log for step 4
+        bytes32 randomHash = keccak256(
+            abi.encodePacked(randomBlockHash, packedData)
+        );
+
+        emit ValidationLog(
+            msg.sender,
+            4,
+            true,
+            string(
+                abi.encodePacked(
+                    "Keccak256 of [blockhash + packedData]: ",
+                    _bytes32ToHexString(randomHash)
+                )
+            )
+        );
+
+        // * add the validation log for step 5
         uint256 randomNumber = uint256(randomHash);
         uint8 recomputedResult = uint8(randomNumber % RESULT_COUNT);
+        emit ValidationLog(
+            msg.sender,
+            5,
+            true,
+            string(
+                abi.encodePacked(
+                    "Final random outcome (mod ",
+                    _uint256ToString(RESULT_COUNT),
+                    "): ",
+                    _uint256ToString(recomputedResult)
+                )
+            )
+        );
+        return recomputedResult == result;
+    }
 
-        if (recomputedResult != result) {
-            rejectedValidators.push(msg.sender);
-            emit ResultRejected(msg.sender, result, recomputedResult);
-            if (rejectedValidators.length >= validatorThreshold) {
-                refundAllTransactions("Majority of validators rejected the result.");
-            }
-        } else if (recomputedResult == result) {
-                uint256 totalPayout = 0;
-                uint256[] memory payouts = new uint256[](bets.length);
+    // * function to check if the result settlement is valid
+    function isResultSettlementValid() private returns (bool) {
+        // * calculate the total bet amount
+        uint256 totalInputAmount = 0;
+        totalInputAmount += hostDeposit;
+        for (uint256 i = 0; i < bets.length; i++) {
+            totalInputAmount += bets[i].amount;
+        }
 
-                for (uint256 i = 0; i < bets.length; i++) {
-                    uint8 option = bets[i].option;
-                    uint256 amount = bets[i].amount;
+        // * calculate the total payout for all bets
+        uint256 totalBetPayoutAmount = 0;
+        for (uint256 i = 0; i < bets.length; i++) {
+            totalBetPayoutAmount += getBetPayoutAmount(bets[i]);
+        }
 
-                    if (
-                        (option <= OPTION_STRAIGHT_UP_ZERO_ZERO && option == result) ||
-                        (option == OPTION_LOW && isInLowSet(result)) ||
-                        (option == OPTION_HIGH && isInHighSet(result)) ||
-                        (option == OPTION_RED && isInRedSet(result)) ||
-                        (option == OPTION_BLACK && isInBlackSet(result)) ||
-                        (option == OPTION_EVEN && isInEvenSet(result)) ||
-                        (option == OPTION_ODD && isInOddSet(result)) ||
-                        (option == OPTION_FIRST_COLUMN && isInFirstColumnSet(result)) ||
-                        (option == OPTION_SECOND_COLUMN && isInSecondColumnSet(result)) ||
-                        (option == OPTION_THIRD_COLUMN && isInThirdColumnSet(result)) ||
-                        (option == OPTION_FIRST_DOZEN && isInFirstDozenSet(result)) ||
-                        (option == OPTION_SECOND_DOZEN && isInSecondDozenSet(result)) ||
-                        (option == OPTION_THIRD_DOZEN && isInThirdDozenSet(result))
-                    ) {
-                        uint256 payout = amount * getPayoutMultiplier(option);
-                        totalPayout += payout;
-                        payouts[i] = payout;
-                    }
-                }
+        uint256 totalHostReturn = address(this).balance - totalBetPayoutAmount;
 
-            uint256 contractBalance = address(this).balance;
+        uint256 totalOutputAmount = totalBetPayoutAmount + totalHostReturn;
 
-            if(verifyPayoutCoverage(totalPayout, contractBalance - totalPayout)){
+        emit ValidationLog(
+            msg.sender,
+            6,
+            true,
+            string(
+                abi.encodePacked(
+                    "Total input amount: ",
+                    _uint256ToString(totalInputAmount),
+                    "Total output amount: ",
+                    _uint256ToString(totalOutputAmount)
+                )
+            )
+        );
 
+        // ! Ideally, the total host return should be equal to the total input amount
+        // ! However, someone can directly transfer funds to the contract
+        // ! The condition below will then be false
+        //// return totalOutputAmount == totalInputAmount;
 
-                approvedValidators.push(msg.sender);
-                emit ResultAccepted(msg.sender, result, recomputedResult);
-            }else{
-                rejectedValidators.push(msg.sender);
-                emit ResultRejected_MismatchPayout(msg.sender, "Payout + host return must exactly match deposited & bet fail", totalPayout);
-                if (rejectedValidators.length >= validatorThreshold) {
-                    refundAllTransactions("Fail: Payout + host return not equal deposited + bet");
-                }
-            }
+        // ! The condition below will then be true, but the host will get the extra funds
+        // ? is this acceptable
+        return totalOutputAmount >= totalInputAmount;
+    }
 
-            if (approvedValidators.length >= validatorThreshold) {
-                emit ResultValidated(result);
-                status = STATUS_RESULT_VALIDATED;
-
-                settleBet(payouts);
+    // * function to settle the bet
+    function settleBet() private {
+        for (uint256 i = 0; i < bets.length; i++) {
+            uint256 betPayoutAmount = getBetPayoutAmount(bets[i]);
+            if (betPayoutAmount > 0) {
+                payable(bets[i].player).transfer(betPayoutAmount);
+                emit BetPayout(bets[i].player, bets[i].option, betPayoutAmount);
             }
         }
-    }
 
-    // Optimized settleBet function with single loop and pre-validation moved to validateResult
-function settleBet(uint256[] memory payouts) private {
-    for (uint256 i = 0; i < bets.length; i++) {
-        if (payouts[i] > 0) {
-            payable(bets[i].player).transfer(payouts[i]);
-            emit BetPayout(bets[i].player, bets[i].option, payouts[i]);
+        uint256 hostBalance = address(this).balance;
+        if (hostBalance > 0) {
+            payable(host).transfer(hostBalance);
+            emit DepositPayout(host, hostBalance);
         }
+
+        status = STATUS_GAME_FINISHED;
+        emit GameFinished();
     }
-
-    uint256 hostBalance = address(this).balance;
-    if (hostBalance > 0) {
-        payable(host).transfer(hostBalance);
-        emit DepositPayout(host, hostBalance);
-    }
-
-    status = STATUS_GAME_FINISHED;
-    emit GameFinished();
-}
-
 
     // * ----------------------------------
     // * Public Functions
     // *----------------------------------
+
+    // * function to get the current status of the game
     function getStatus() public view returns (uint8) {
         return status;
     }
 
+    // * function to get the number of bets
     function getBetsCount() public view returns (uint256) {
         return bets.length;
     }
 
-    function getTotalBetsAmount() public view returns (uint256) {
+    // * function to get the total bet amount
+    function getTotalBetAmount() public view returns (uint256) {
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < bets.length; i++) {
             totalAmount += bets[i].amount;
@@ -811,9 +871,8 @@ function settleBet(uint256[] memory payouts) private {
             "Deposit amount can not cover the minimum bet."
         );
         hostDeposit = msg.value;
-        maxBet = calMaxBet;
         status = STATUS_PENDING_PLAYER_BET;
-        emit DepositPlaced(msg.sender, msg.value, maxBet);
+        emit DepositPlaced(msg.sender, msg.value);
     }
 
     function withdraw() public {
@@ -836,10 +895,17 @@ function settleBet(uint256[] memory payouts) private {
             msg.value >= minBet,
             "Bet amount cannot be less than the minimum bet amount."
         );
+
+        // * check if the incoming bet amount is valid, work in multiple bets scenario
+        uint256 hostCommitableAmount = getHostCommitableAmount();
+        uint256 payoutMultiplier = getPayoutMultiplier(option);
+        uint256 winningPayout = msg.value * payoutMultiplier;
         require(
-            msg.value <= maxBet,
-            "Bet amount cannot exceed the maximum bet amount."
+            winningPayout <= hostCommitableAmount,
+            "Bet amount cannot exceed the host payable amount."
         );
+
+        // * the bet is accepted
         Bet memory playerBet = Bet({
             player: msg.sender,
             option: option,
@@ -868,6 +934,7 @@ function settleBet(uint256[] memory payouts) private {
     }
 
     // * wait at least 12 blocks before calling this function
+    // * operatior should provide an offchain scheduler to call this function
     function generateResult() public {
         require(
             status == STATUS_NO_MORE_BETS,
@@ -878,12 +945,15 @@ function settleBet(uint256[] memory payouts) private {
             block.number >= cutOffBlockNumber + BLOCK_NUMBER_OFFSET + 1,
             "Result cannot be generated before the required block number is reached."
         );
-        //Just Operator allow to generate result
+        // * only Operator allow to generate result
         require(msg.sender == owner, "Only operator can generate result.");
 
         // * get the block hash of the earlier block
         uint256 usedBlockNumber = cutOffBlockNumber + 1;
         bytes32 randomBlockHash = blockhash(usedBlockNumber);
+
+        // ! case when block hash is zero, refund all transactions and cancel the game
+        // ! should not happen, but if it does, refund all transactions and cancel the game
         if (randomBlockHash == bytes32(0)) {
             refundAllTransactions("Block hash is not available.");
             return;
@@ -916,5 +986,57 @@ function settleBet(uint256[] memory payouts) private {
     function getRejectedValidators() public view returns (address[] memory) {
         return rejectedValidators;
     }
-  
+
+    // * function to handle the after validation process
+    // * either refund all transactions or settle the bet, depending on the which validator threshold is reached first
+    function postValidateResult() private {
+        // * check if the validator threshold is reached
+        if (rejectedValidators.length >= validatorThreshold) {
+            refundAllTransactions(
+                "Majority of validators rejected the result."
+            );
+            return;
+        }
+        // * check if the validator threshold is reached
+        if (approvedValidators.length >= validatorThreshold) {
+            emit ResultValidated();
+            status = STATUS_RESULT_VALIDATED;
+            settleBet();
+            return;
+        }
+        return;
+    }
+
+    // Integrated validation and payout calculation in validateResult
+    function validateResult() public {
+        require(
+            status == STATUS_RESULT_GENERATED,
+            "Result can not be validated in current status."
+        );
+
+        require(
+            isAssignableValidator(msg.sender),
+            "Only validators can validate the result."
+        );
+
+        // * check if the result generation process is valid
+        if (!isResultGenerationValid()) {
+            rejectedValidators.push(msg.sender);
+            emit ResultRejected(msg.sender, "Invalid Result Generation");
+            return postValidateResult();
+        }
+
+        // * check if the result settlement process is valid
+        if (!isResultSettlementValid()) {
+            rejectedValidators.push(msg.sender);
+            emit ResultRejected(msg.sender, "Invalid Result Settlement");
+            return postValidateResult();
+        }
+
+        // * if the validation passes the above two checks, the result is valid
+        // * the validator can now validate the result
+        approvedValidators.push(msg.sender);
+        emit ResultAccepted(msg.sender);
+        return postValidateResult();
+    }
 }
